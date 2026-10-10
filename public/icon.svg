@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="brandGrad" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="50%" stop-color="#0369a1" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="pipeGold" x1="8" y1="8" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0ea5e9" />
+    </linearGradient>
+  </defs>
+  <!-- Background Rounded Shield -->
+  <rect width="32" height="32" rx="8" fill="url(#brandGrad)" />
+  
+  <!-- Outer precision ring border -->
+  <rect x="1" y="1" width="30" height="30" rx="7" stroke="rgba(255,255,255,0.18)" stroke-width="1.2" />
+
+  <!-- Stylized Pipeline Flow 'S' Monogram & Water Crest -->
+  <path 
+    d="M21 9H13C10.7909 9 9 10.7909 9 13C9 15.2091 10.7909 17 13 17H19C21.2091 17 23 18.7909 23 21C23 23.2091 21.2091 25 19 25H11" 
+    stroke="#ffffff" 
+    stroke-width="3" 
+    stroke-linecap="round" 
+    stroke-linejoin="round"
+  />
+  <!-- Inner Hydro Flow Accent -->
+  <path 
+    d="M19 10.5C20.5 10.5 21.5 11.5 21.5 13" 
+    stroke="url(#pipeGold)" 
+    stroke-width="2" 
+    stroke-linecap="round" 
+  />
+  <circle cx="11" cy="25" r="1.8" fill="#38bdf8" />
+  <circle cx="21" cy="9" r="1.8" fill="#38bdf8" />
+</svg>

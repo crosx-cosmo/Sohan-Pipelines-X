@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { motion } from 'motion/react';
 import { Star, Quote, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -24,47 +27,55 @@ export function TestimonialsSection() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {testimonials.map((testimonial) => (
-            <Card
+          {testimonials.map((testimonial, i) => (
+            <motion.div
               key={testimonial.name}
-              className="relative border-border/70 bg-card rounded-2xl transition-all duration-300 hover:shadow-lg hover:border-primary/40 flex flex-col justify-between"
+              initial={{ opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-50px' }}
+              whileHover={{ y: -4 }}
+              transition={{ duration: 0.28, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+              style={{ willChange: 'transform' }}
+              className="h-full gpu-accelerated"
             >
-              <CardContent className="p-6 flex-1 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex gap-1">
-                      {Array.from({ length: testimonial.rating }).map((_, idx) => (
-                        <Star key={idx} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                      ))}
+              <Card className="h-full relative border border-border/80 bg-card/95 dark:bg-card/85 rounded-2xl transition-[border-color,box-shadow] duration-200 shadow-crisp-sm hover:shadow-crisp-lg hover:border-primary/60 flex flex-col justify-between">
+                <CardContent className="p-6 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex gap-1">
+                        {Array.from({ length: testimonial.rating }).map((_, idx) => (
+                          <Star key={idx} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+                      <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        Verified
+                      </span>
                     </div>
-                    <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      Verified
+
+                    <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground mb-6">
+                      &ldquo;{testimonial.text}&rdquo;
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-border/60 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold text-xs font-mono">
+                        {testimonial.name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-xs text-foreground">{testimonial.name}</p>
+                        <p className="text-[11px] text-muted-foreground">{testimonial.role}</p>
+                      </div>
+                    </div>
+
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground max-w-[110px] truncate">
+                      {testimonial.service}
                     </span>
                   </div>
-
-                  <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground mb-6">
-                    &ldquo;{testimonial.text}&rdquo;
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-border/60 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold text-xs font-mono">
-                      {testimonial.name.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-xs text-foreground">{testimonial.name}</p>
-                      <p className="text-[11px] text-muted-foreground">{testimonial.role}</p>
-                    </div>
-                  </div>
-
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground max-w-[110px] truncate">
-                    {testimonial.service}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
 

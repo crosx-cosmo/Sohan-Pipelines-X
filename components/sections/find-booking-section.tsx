@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import {
   Search,
@@ -114,25 +115,41 @@ export function FindBookingSection() {
           </CardContent>
         </Card>
 
-        {searched && !result && (
-          <Card className="border-destructive/30 animate-fade-in">
-            <CardContent className="pt-6 pb-6 text-center space-y-2">
-              <XCircle className="h-8 w-8 text-destructive mx-auto" />
-              <h3 className="font-display font-semibold">Booking not found</h3>
-              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                We couldn&apos;t find a booking matching that Booking ID and phone number. Please
-                double-check both and try again, or{' '}
-                <a href={`tel:${businessInfo.phone}`} className="text-primary underline underline-offset-2">
-                  call us
-                </a>{' '}
-                for help.
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        <AnimatePresence mode="wait">
+          {searched && !result && (
+            <motion.div
+              key="not-found"
+              initial={{ opacity: 0, y: 16, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.98 }}
+              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <Card className="border-destructive/30">
+                <CardContent className="pt-6 pb-6 text-center space-y-2">
+                  <XCircle className="h-8 w-8 text-destructive mx-auto" />
+                  <h3 className="font-display font-semibold">Booking not found</h3>
+                  <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                    We couldn&apos;t find a booking matching that Booking ID and phone number. Please
+                    double-check both and try again, or{' '}
+                    <a href={`tel:${businessInfo.phone}`} className="text-primary underline underline-offset-2">
+                      call us
+                    </a>{' '}
+                    for help.
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
 
-        {result && (
-          <Card className="border-border/60 animate-fade-in">
+          {result && (
+            <motion.div
+              key={result.bookingId}
+              initial={{ opacity: 0, y: 16, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.98 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <Card className="border-border/80 shadow-crisp-sm render-crisp">
             <CardContent className="pt-6 space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b">
                 <div>
@@ -263,7 +280,9 @@ export function FindBookingSection() {
               </p>
             </CardContent>
           </Card>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   );

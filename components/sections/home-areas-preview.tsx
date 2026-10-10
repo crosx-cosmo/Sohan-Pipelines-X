@@ -28,7 +28,7 @@ export function HomeAreasPreview() {
 
     if (match) {
       toast.success(`Service Available in ${match}!`, {
-        description: 'Our mobile plumbing units cover this location. Dispatch available.',
+        description: 'Our mobile plumbing units cover this location. Dispatch available today.',
       });
     } else {
       toast.info(`Special Dispatch for "${query.trim()}"`, {
@@ -47,41 +47,47 @@ export function HomeAreasPreview() {
     <section className="py-20 lg:py-28 bg-muted/20 border-b border-border/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12"
+        >
           <div className="max-w-2xl">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary mb-2.5">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.065em] text-primary mb-2.5">
               <span>04. Regional Operations</span>
               <span aria-hidden="true">·</span>
-              <span>South Bengal Network</span>
+              <span className="text-muted-foreground font-medium">South Bengal Network</span>
             </div>
             <h2 className="font-display text-3xl sm:text-4xl lg:text-4xl font-bold tracking-tight text-foreground text-balance">
               Service Coverage &amp; Dispatch Hubs
             </h2>
-            <p className="mt-3 text-base text-muted-foreground leading-relaxed text-balance">
+            <p className="mt-3 text-base text-muted-foreground leading-relaxed text-pretty font-normal tracking-[0.002em]">
               Operating directly from Keshrambha and Dantan, we provide structured,
               reliable plumbing dispatch throughout Paschim and Purba Medinipur.
             </p>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <Button asChild variant="outline" size="sm" className="font-semibold text-xs h-9">
+            <Button asChild variant="outline" size="sm" className="font-semibold text-xs h-9.5 rounded-xl border-border/80">
               <Link href="/service-areas">
                 View All Hubs
                 <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
               </Link>
             </Button>
-            <Button asChild size="sm" className="font-semibold text-xs h-9">
+            <Button asChild size="sm" className="font-semibold text-xs h-9.5 rounded-xl shadow-sm">
               <Link href="/book">Book In Your Area</Link>
             </Button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Interactive Quick Area Checker Form */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-8 p-4 sm:p-5 rounded-2xl bg-card border border-border/70 shadow-xs"
+          className="mb-8 p-4 sm:p-5 rounded-2xl bg-card border border-border/80 shadow-crisp-xs render-crisp"
         >
           <form onSubmit={handleCheckArea} className="flex flex-col sm:flex-row items-center gap-3">
             <div className="relative flex-1 w-full">
@@ -91,10 +97,10 @@ export function HomeAreasPreview() {
                 placeholder="Check your locality (e.g. Dantan, Kharagpur, Contai, Belda)..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="pl-10 h-11 text-xs sm:text-sm bg-muted/30 border-border/60"
+                className="pl-10 h-11 text-xs sm:text-sm bg-muted/30 border-border/60 rounded-xl"
               />
             </div>
-            <Button type="submit" className="w-full sm:w-auto h-11 px-5 text-xs font-semibold whitespace-nowrap">
+            <Button type="submit" className="w-full sm:w-auto h-11 px-5 text-xs font-semibold whitespace-nowrap rounded-xl shadow-sm">
               Verify Dispatch
             </Button>
           </form>
@@ -108,7 +114,12 @@ export function HomeAreasPreview() {
         {/* 2 Regional Hub Showcase Cards */}
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Paschim Medinipur Hub */}
-          <div className="rounded-2xl border border-border/70 bg-card p-6 sm:p-7 shadow-xs flex flex-col justify-between">
+          <motion.div
+            whileHover={{ y: -3 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            style={{ willChange: 'transform' }}
+            className="rounded-2xl border border-border/80 bg-card p-6 sm:p-7 shadow-crisp-sm flex flex-col justify-between transition-[border-color,box-shadow] duration-200 hover:border-primary/60 hover:shadow-crisp-lg gpu-accelerated"
+          >
             <div>
               <div className="flex items-center justify-between pb-4 mb-5 border-b border-border/60">
                 <div className="flex items-center gap-3">
@@ -156,10 +167,15 @@ export function HomeAreasPreview() {
                 <Link href="/book">Schedule Paschim Visit →</Link>
               </Button>
             </div>
-          </div>
+          </motion.div>
 
           {/* Purba Medinipur Hub */}
-          <div className="rounded-2xl border border-border/70 bg-card p-6 sm:p-7 shadow-xs flex flex-col justify-between">
+          <motion.div
+            whileHover={{ y: -3 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            style={{ willChange: 'transform' }}
+            className="rounded-2xl border border-border/80 bg-card p-6 sm:p-7 shadow-crisp-sm flex flex-col justify-between transition-[border-color,box-shadow] duration-200 hover:border-primary/60 hover:shadow-crisp-lg gpu-accelerated"
+          >
             <div>
               <div className="flex items-center justify-between pb-4 mb-5 border-b border-border/60">
                 <div className="flex items-center gap-3">
@@ -207,11 +223,11 @@ export function HomeAreasPreview() {
                 <Link href="/book">Schedule Purba Visit →</Link>
               </Button>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Coverage Assistance Banner */}
-        <div className="mt-8 rounded-2xl border border-border/70 bg-card p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+        <div className="mt-8 rounded-2xl border border-border/70 bg-card p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs shadow-xs">
           <div className="flex items-center gap-3 text-center sm:text-left">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0 hidden sm:flex">
               <Phone className="h-4 w-4" />

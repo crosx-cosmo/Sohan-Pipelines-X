@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { motion } from 'motion/react';
 import { MapPin, Navigation, Phone, Clock, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { businessInfo } from '@/lib/business-info';
@@ -43,10 +44,17 @@ export function ServiceAreasSection() {
 
               {/* Area Cards Grid */}
               <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
-                {areas.map((area) => (
-                  <div
+                {areas.map((area, idx) => (
+                  <motion.div
                     key={area}
-                    className="group rounded-xl border border-border/70 bg-card p-4 transition-all duration-200 hover:border-primary/50 hover:shadow-md flex flex-col justify-between"
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.25, delay: idx * 0.03, ease: [0.16, 1, 0.3, 1] }}
+                    whileHover={{ y: -3 }}
+                    whileTap={{ scale: 0.985 }}
+                    style={{ willChange: 'transform' }}
+                    className="group rounded-xl border border-border/80 bg-card p-4 transition-[border-color,box-shadow] duration-200 shadow-crisp-xs hover:shadow-crisp-md hover:border-primary/60 flex flex-col justify-between gpu-accelerated cursor-pointer select-none"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2">
@@ -71,7 +79,7 @@ export function ServiceAreasSection() {
                         Book <ArrowRight className="h-3 w-3" />
                       </Link>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>

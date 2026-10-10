@@ -72,24 +72,24 @@ export function ContactSection() {
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           {/* Left Column: Direct Communication Channels (col-span-5) */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.065em] text-primary">
               <span>Direct Communication</span>
               <span aria-hidden="true">·</span>
-              <span>Available Mon–Sat</span>
+              <span className="text-muted-foreground font-medium">Available Mon–Sat</span>
             </div>
 
             <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-foreground text-balance">
               Need a Plumber? We Are On Call.
             </h2>
 
-            <p className="text-muted-foreground text-base leading-relaxed text-balance">
+            <p className="text-muted-foreground text-base leading-relaxed text-pretty font-normal tracking-[0.002em]">
               Whether you are dealing with a burst pipe emergency or planning scheduled
               bathroom fittings, our master technicians respond promptly.
             </p>
 
             <div className="space-y-3.5 pt-2">
               {/* Phone card */}
-              <div className="group flex items-center justify-between rounded-2xl border border-border/70 bg-card p-4 sm:p-5 transition-all hover:border-primary/40 hover:shadow-md">
+              <div className="group flex items-center justify-between rounded-2xl border border-border/70 bg-card p-4 sm:p-5 transition-[border-color,box-shadow,background-color] duration-200 hover:border-primary/40 hover:shadow-md">
                 <a
                   href={`tel:${businessInfo.phone}`}
                   className="flex items-center gap-4 flex-1 min-w-0"
@@ -117,7 +117,7 @@ export function ContactSection() {
               </div>
 
               {/* Email card */}
-              <div className="group flex items-center justify-between rounded-2xl border border-border/70 bg-card p-4 sm:p-5 transition-all hover:border-primary/40 hover:shadow-md">
+              <div className="group flex items-center justify-between rounded-2xl border border-border/70 bg-card p-4 sm:p-5 transition-[border-color,box-shadow,background-color] duration-200 hover:border-primary/40 hover:shadow-md">
                 <a
                   href={`mailto:${businessInfo.email}`}
                   className="flex items-center gap-4 flex-1 min-w-0"

@@ -1,26 +1,29 @@
 import * as React from 'react';
-import { businessInfo } from '@/lib/business-info';
+import { businessInfo, testimonials } from '@/lib/business-info';
 import { services } from '@/lib/services';
 import { SITE_LOGO_URL } from '@/lib/site-logo';
 
 export function SeoStructuredData() {
   const baseUrl = 'https://sohan-pipelines.netlify.app';
 
-  // 1. LocalBusiness / Plumber Schema
+  // 1. LocalBusiness / Plumber Schema with Rich Star Rating & Reviews
   const localBusinessSchema = {
     '@context': 'https://schema.org',
     '@type': ['Plumber', 'HomeAndConstructionBusiness', 'LocalBusiness'],
     '@id': `${baseUrl}/#organization`,
     name: businessInfo.name,
     legalName: businessInfo.name,
-    alternateName: "Sohan Pipeline's",
+    alternateName: ["Sohan Pipeline's", 'Sohan Plumbing Works', 'Sohan Pipe Fitting Midnapore'],
     url: baseUrl,
     logo: SITE_LOGO_URL,
-    image: SITE_LOGO_URL,
+    image: [SITE_LOGO_URL],
     description: businessInfo.description,
     telephone: businessInfo.phone,
     email: businessInfo.email,
-    priceRange: '₹₹ (Starting from ₹299)',
+    foundingDate: businessInfo.established.toString(),
+    priceRange: '₹₹ (Starting from ₹199)',
+    currenciesAccepted: 'INR',
+    paymentAccepted: 'Cash, UPI, Google Pay, PhonePe, Paytm, Bank Transfer',
     address: {
       '@type': 'PostalAddress',
       streetAddress: businessInfo.address,
@@ -49,6 +52,13 @@ export function SeoStructuredData() {
         closes: '15:00',
       },
     ],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      telephone: businessInfo.phone,
+      contactType: 'customer service',
+      areaServed: 'IN',
+      availableLanguage: ['English', 'Bengali', 'Hindi'],
+    },
     aggregateRating: {
       '@type': 'AggregateRating',
       ratingValue: businessInfo.rating.toString(),
@@ -57,6 +67,24 @@ export function SeoStructuredData() {
       ratingCount: businessInfo.reviewCount.toString(),
       reviewCount: businessInfo.reviewCount.toString(),
     },
+    review: testimonials.map((t) => ({
+      '@type': 'Review',
+      author: {
+        '@type': 'Person',
+        name: t.name,
+      },
+      reviewRating: {
+        '@type': 'Rating',
+        ratingValue: t.rating.toString(),
+        bestRating: '5',
+        worstRating: '1',
+      },
+      reviewBody: t.text,
+      itemReviewed: {
+        '@type': 'Plumber',
+        name: businessInfo.name,
+      },
+    })),
     areaServed: businessInfo.serviceAreas.map((area) => ({
       '@type': 'City',
       name: area,
@@ -86,6 +114,8 @@ export function SeoStructuredData() {
       'Sanitary Fixtures & Bathroom Renovation',
       'Overhead Water Tank Setup',
       'Booster Pump Manifold Piping',
+      'Commercial Plumbing Maintenance',
+      'Submersible Motor Piping',
     ],
   };
 
@@ -107,6 +137,23 @@ export function SeoStructuredData() {
     },
   };
 
+  // 3. Organization Schema
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    '@id': `${baseUrl}/#corp`,
+    name: businessInfo.name,
+    url: baseUrl,
+    logo: SITE_LOGO_URL,
+    contactPoint: {
+      '@type': 'ContactPoint',
+      telephone: businessInfo.phone,
+      contactType: 'emergency dispatch',
+      areaServed: 'IN',
+      availableLanguage: ['English', 'Bengali', 'Hindi'],
+    },
+  };
+
   return (
     <>
       <script
@@ -116,6 +163,10 @@ export function SeoStructuredData() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
       />
     </>
   );

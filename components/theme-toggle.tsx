@@ -68,6 +68,7 @@ export function ThemeToggle({ className }: { className?: string }) {
             ? 'bg-slate-950 text-sky-300 shadow-slate-950/60'
             : 'bg-white text-amber-500 shadow-slate-400/40'
         )}
+        style={{ willChange: 'transform' }}
         animate={{
           x: isDark ? 24 : 0,
         }}

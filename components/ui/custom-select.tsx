@@ -181,7 +181,7 @@ export function CustomSelect({
           'group relative flex w-full items-center justify-between gap-2.5 rounded-lg border px-3.5 py-2.5 text-xs sm:text-sm font-medium',
           'bg-card/75 dark:bg-card/60 backdrop-blur-md',
           'border-border/80 dark:border-border/60',
-          'shadow-xs transition-all duration-200',
+          'shadow-xs transition-[color,background-color,border-color,box-shadow] duration-150',
           'hover:border-primary/50 hover:bg-card/90 dark:hover:bg-card/80 hover:shadow-sm',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:border-primary',
           isOpen && 'border-primary ring-2 ring-primary/20 bg-card/95 shadow-sm',
@@ -228,8 +228,9 @@ export function CustomSelect({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+            style={{ willChange: 'opacity, transform' }}
             className={cn(
-              'absolute left-0 right-0 z-50 mt-1.5 min-w-[200px] overflow-hidden rounded-xl border',
+              'absolute left-0 right-0 z-50 mt-1.5 min-w-[200px] overflow-hidden rounded-xl border gpu-accelerated',
               'bg-card/95 dark:bg-card/90 backdrop-blur-xl',
               'border-border/80 dark:border-border/60',
               'shadow-xl dark:shadow-2xl ring-1 ring-black/5 dark:ring-white/5',

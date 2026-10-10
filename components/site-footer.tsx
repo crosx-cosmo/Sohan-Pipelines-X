@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   Phone,
   Mail,
@@ -12,7 +13,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { businessInfo } from '@/lib/business-info';
-import { SITE_LOGO_URL } from '@/lib/site-logo';
+import { BrandLogo } from '@/components/brand-logo';
 import { cn } from '@/lib/utils';
 
 const footerSections = [
@@ -96,11 +97,7 @@ export function SiteFooter() {
           {/* Brand & Direct Contact */}
           <div className="lg:col-span-2 space-y-4">
             <Link href="/" className="flex items-center gap-3 group shrink-0">
-              <img
-                src={SITE_LOGO_URL}
-                alt="Sohan Pipeline's & Plumbing logo"
-                className="h-10 w-10 shrink-0 rounded-xl object-cover ring-1 ring-border/60 shadow-xs transition-transform group-hover:scale-105"
-              />
+              <BrandLogo size="md" />
               <span className="flex flex-col leading-none">
                 <span className="font-display text-base font-bold tracking-tight text-foreground">
                   Sohan Pipeline&apos;s
@@ -156,29 +153,61 @@ export function SiteFooter() {
             const isOpen = openSections[section.id];
             return (
               <div key={section.id} className="border-b lg:border-b-0 border-border/50 pb-4 lg:pb-0">
-                {/* Mobile accordion toggle button */}
-                <button
+                {/* Mobile accordion toggle button with tap feedback */}
+                <motion.button
                   type="button"
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => toggleSection(section.id)}
-                  className="flex lg:hidden w-full items-center justify-between py-2 text-left text-xs font-semibold uppercase tracking-wider text-foreground"
+                  className="flex lg:hidden w-full items-center justify-between py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-foreground select-none cursor-pointer"
                   aria-expanded={isOpen}
                 >
                   <span>{section.title}</span>
-                  <ChevronDown
-                    className={cn(
-                      'h-4 w-4 text-muted-foreground transition-transform duration-200',
-                      isOpen && 'rotate-180'
-                    )}
-                  />
-                </button>
+                  <motion.span
+                    animate={{ rotate: isOpen ? 180 : 0 }}
+                    transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex items-center justify-center"
+                  >
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </motion.span>
+                </motion.button>
 
                 {/* Desktop static header */}
                 <h4 className="hidden lg:block font-display font-semibold text-xs uppercase tracking-wider text-foreground mb-4">
                   {section.title}
                 </h4>
 
-                {/* Links list: expanded by default on desktop, collapsible on mobile */}
-                <div className={cn('pt-2 lg:pt-0', isOpen ? 'block' : 'hidden lg:block')}>
+                {/* Mobile animated collapsible container */}
+                <div className="lg:hidden">
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        key={`footer-col-${section.id}`}
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+                        style={{ willChange: 'height, opacity' }}
+                        className="overflow-hidden pt-1"
+                      >
+                        <ul className="space-y-2.5 pb-2">
+                          {section.links.map((link) => (
+                            <li key={link.label}>
+                              <Link
+                                href={link.href}
+                                className="text-xs text-muted-foreground hover:text-foreground transition-colors block py-0.5"
+                              >
+                                {link.label}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Desktop static links list */}
+                <div className="hidden lg:block">
                   <ul className="space-y-2.5">
                     {section.links.map((link) => (
                       <li key={link.label}>
@@ -236,7 +265,7 @@ export function SiteFooter() {
               <span>{businessInfo.hours}</span>
             </span>
             <span>{businessInfo.hoursDays}</span>
-            <span className="text-muted-foreground/70">Sunday: Emergency Calls Only</span>
+            <span className="text-muted-foreground font-medium">Sunday: Emergency Calls Only</span>
           </div>
         </div>
       </div>

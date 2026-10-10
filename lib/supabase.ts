@@ -12,7 +12,6 @@ if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_P
   // without the env vars configured still succeed. Any real call to
   // `supabase` will fail until NEXT_PUBLIC_SUPABASE_URL and
   // NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY are set (see SUPABASE_SETUP.md).
-  // eslint-disable-next-line no-console
   console.warn(
     '[supabase] NEXT_PUBLIC_SUPABASE_URL and/or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY are not set. ' +
       'Booking and lookup features will not work until these are configured.'

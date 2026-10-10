@@ -599,7 +599,7 @@ export function Plumber404Animation() {
             variant="outline"
             size="sm"
             onClick={handleReplay}
-            className="h-7 px-2.5 text-[11px] font-medium gap-1.5 bg-background/80 backdrop-blur-md border-border/70 hover:bg-background/95 hover:text-primary transition-all shadow-xs"
+            className="h-7 px-2.5 text-[11px] font-medium gap-1.5 bg-background/80 backdrop-blur-md border-border/70 hover:bg-background/95 hover:text-primary transition-colors duration-150 shadow-xs"
             title="Replay connection attempt"
           >
             <RotateCcw className="h-3 w-3" />

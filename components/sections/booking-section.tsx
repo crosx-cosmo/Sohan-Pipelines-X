@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import {
   ArrowLeft,
@@ -190,7 +191,7 @@ export function BookingSection() {
                 >
                   <span
                     className={cn(
-                      'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all',
+                      'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-colors duration-150',
                       i < currentStepIndex
                         ? 'bg-primary text-primary-foreground'
                         : i === currentStepIndex
@@ -206,48 +207,61 @@ export function BookingSection() {
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500 ease-out"
+                className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-[width] duration-400 ease-out"
                 style={{ width: `${progress}%` }}
               />
             </div>
           </div>
         )}
 
-        {/* Step 1: Service Selection */}
-        {step === 'service' && (
-          <div className="animate-fade-in">
-            <div className="grid gap-4 sm:grid-cols-2">
-              {services.map((service, i) => (
-                <button
-                  key={service.id}
-                  onClick={() => handleServiceSelect(service)}
-                  className="group text-left rounded-2xl border border-border/60 bg-card p-5 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 animate-fade-in-up"
-                  style={{ animationDelay: `${i * 0.04}s`, animationFillMode: 'both' }}
-                >
-                  <div className="flex items-start gap-4">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 text-primary transition-transform group-hover:scale-110">
-                      <service.icon className="h-5 w-5" />
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <h3 className="font-display font-semibold text-sm leading-tight">
-                          {service.name}
-                        </h3>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -12 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            style={{ willChange: 'opacity, transform' }}
+            className="gpu-accelerated"
+          >
+            {/* Step 1: Service Selection */}
+            {step === 'service' && (
+              <div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {services.map((service, i) => (
+                    <motion.button
+                      key={service.id}
+                      whileHover={{ y: -3 }}
+                      whileTap={{ scale: 0.985 }}
+                      transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                      style={{ willChange: 'transform' }}
+                      onClick={() => handleServiceSelect(service)}
+                      className="group text-left rounded-2xl border border-border/80 bg-card/95 dark:bg-card/85 p-5 transition-[border-color,box-shadow] duration-200 hover:border-primary/50 hover:shadow-crisp-md cursor-pointer select-none shadow-crisp-xs gpu-accelerated"
+                    >
+                      <div className="flex items-start gap-4">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 text-primary transition-transform group-hover:scale-110">
+                          <service.icon className="h-5 w-5" />
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <h3 className="font-display font-semibold text-sm leading-tight group-hover:text-primary transition-colors">
+                              {service.name}
+                            </h3>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {service.description}
+                          </p>
+                          <div className="flex items-center justify-between mt-3">
+                            <span className="text-sm font-bold tabular-nums font-mono text-foreground">₹{service.startingPrice}</span>
+                            <span className="text-xs text-muted-foreground font-medium">{service.duration}</span>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                        {service.description}
-                      </p>
-                      <div className="flex items-center justify-between mt-3">
-                        <span className="text-sm font-bold tabular-nums font-mono">₹{service.startingPrice}</span>
-                        <span className="text-xs text-muted-foreground">{service.duration}</span>
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            )}
 
         {/* Step 2: Urgency */}
         {step === 'urgency' && (
@@ -282,14 +296,18 @@ export function BookingSection() {
                 {URGENCY_LEVELS.map((level) => {
                   const Icon = urgencyIcons[level.id];
                   return (
-                    <button
+                    <motion.button
                       key={level.id}
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.985 }}
+                      transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                      style={{ willChange: 'transform' }}
                       onClick={() => handleUrgencySelect(level.id)}
                       className={cn(
-                        'text-left rounded-2xl border p-4 transition-all hover:border-primary/40 hover:-translate-y-0.5',
+                        'text-left rounded-2xl border p-4 transition-[border-color,box-shadow,background-color] duration-150 cursor-pointer select-none shadow-crisp-xs gpu-accelerated',
                         data.urgency === level.id
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border/60 bg-card'
+                          ? 'border-primary bg-primary/10 ring-1 ring-primary/40'
+                          : 'border-border/80 bg-card hover:border-primary/40 hover:bg-muted/40'
                       )}
                     >
                       <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary mb-3">
@@ -297,7 +315,7 @@ export function BookingSection() {
                       </span>
                       <p className="font-display font-semibold text-sm">{level.label}</p>
                       <p className="text-xs text-muted-foreground mt-1">{level.description}</p>
-                    </button>
+                    </motion.button>
                   );
                 })}
               </div>
@@ -748,6 +766,8 @@ export function BookingSection() {
             </CardContent>
           </Card>
         )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </section>
   );
