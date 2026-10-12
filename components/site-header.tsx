@@ -19,12 +19,19 @@ import {
   MessageSquare,
   ChevronRight,
   HelpCircle,
+  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { businessInfo } from '@/lib/business-info';
 import { BrandLogo } from '@/components/brand-logo';
 import { cn } from '@/lib/utils';
+import {
+  luxuryEasing,
+  drawerSlideVariants,
+  drawerBackdropVariants,
+  transitionPresets,
+} from '@/lib/motion';
 
 const navLinks = [
   { href: '/services', label: 'Services', icon: Wrench, description: '12 Certified Engineering Disciplines' },
@@ -40,28 +47,47 @@ export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const pathname = usePathname();
 
-  const [prevPathname, setPrevPathname] = React.useState(pathname);
-  if (prevPathname !== pathname) {
-    setPrevPathname(pathname);
-    setMobileMenuOpen(false);
-  }
-
-  // Lock body scroll while mobile menu is open
+  // Keyboard accessibility: Escape to close
   React.useEffect(() => {
-    if (mobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mobileMenuOpen]);
+
+  // Non-janky body scroll lock preventing layout shifts
+  React.useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    const originalPaddingRight = document.body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
+    document.body.style.overflow = 'hidden';
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
     }
+
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = originalOverflow;
+      document.body.style.paddingRight = originalPaddingRight;
     };
   }, [mobileMenuOpen]);
 
-  // Track window scroll
+  // Track window scroll with passive listener
   React.useEffect(() => {
+    let ticking = false;
     const onScroll = () => {
-      setScrolled(window.scrollY > 16);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setScrolled(window.scrollY > 16);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -74,42 +100,43 @@ export function SiteHeader() {
     <>
       <header
         className={cn(
-          'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
+          'fixed top-0 left-0 right-0 z-40 transition-colors duration-250',
           scrolled || pathname !== '/'
-            ? 'bg-background/85 dark:bg-background/80 backdrop-blur-2xl border-b border-border/80 shadow-md shadow-black/5 dark:shadow-black/20'
-            : 'bg-background/60 dark:bg-background/50 backdrop-blur-md border-b border-border/40'
+            ? 'bg-background/90 dark:bg-background/85 backdrop-blur-xl border-b border-border/80 shadow-xs'
+            : 'bg-background/70 dark:bg-background/60 backdrop-blur-md border-b border-border/40'
         )}
       >
         <div
           className={cn(
-            'mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 transition-all duration-300',
+            'mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 transition-[height] duration-250',
             scrolled ? 'h-14 sm:h-15' : 'h-16 sm:h-18'
           )}
         >
-          {/* Brand Logo & Editorial Wordmark with micro-hover scale */}
+          {/* Brand Logo & Wordmark */}
           <Link
             href="/"
-            className="flex items-center gap-3 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl p-1 -m-1 transition-transform"
+            className="flex items-center gap-3 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl p-1 -m-1"
           >
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.96 }}
-              className="shrink-0"
-            >
+            <div className="shrink-0 transition-transform duration-200 group-hover:scale-105 active:scale-95">
               <BrandLogo size="md" />
-            </motion.div>
+            </div>
             <div className="flex flex-col leading-tight">
-              <span className="font-display text-sm sm:text-base font-bold tracking-tight text-foreground whitespace-nowrap group-hover:text-primary transition-colors duration-200">
-                Sohan Pipeline&apos;s
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-display text-sm sm:text-base font-bold tracking-tight text-foreground whitespace-nowrap group-hover:text-primary transition-colors duration-200">
+                  Sohan Pipeline&apos;s
+                </span>
+                <span className="hidden sm:inline-flex px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-primary/10 text-primary border border-primary/20">
+                  PRO
+                </span>
+              </div>
               <span className="text-[10px] sm:text-[11px] font-medium text-muted-foreground">
                 Total Plumbing Solutions
               </span>
             </div>
           </Link>
 
-          {/* Desktop Navigation Links with Framer Motion Layout Pill */}
-          <nav className="hidden lg:flex items-center gap-1.5 p-1 rounded-full bg-muted/40 border border-border/50 backdrop-blur-md">
+          {/* Desktop Navigation Links */}
+          <nav className="hidden lg:flex items-center gap-1 p-1 rounded-full bg-muted/50 border border-border/60">
             {navLinks.map((link) => {
               const active = isActive(link.href);
               return (
@@ -126,8 +153,8 @@ export function SiteHeader() {
                   {active && (
                     <motion.span
                       layoutId="navActivePill"
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                      className="absolute inset-0 rounded-full bg-card shadow-sm border border-border/70 -z-10"
+                      transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                      className="absolute inset-0 rounded-full bg-card shadow-xs border border-border/80 -z-10"
                     />
                   )}
                   {link.label}
@@ -136,86 +163,71 @@ export function SiteHeader() {
             })}
           </nav>
 
-          {/* Action Zone: Theme Toggle + Book CTA + Mobile Trigger */}
+          {/* Action Zone */}
           <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             <ThemeToggle />
 
-            {/* Desktop Primary CTA Button with interactive shimmer */}
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                asChild
-                size="sm"
-                className="hidden sm:inline-flex font-semibold text-xs h-9 px-4.5 rounded-xl shadow-md shadow-primary/15 group relative overflow-hidden"
-              >
-                <Link href="/book">
-                  <span>Book Service</span>
-                  <ArrowRight className="ml-1.5 h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
-                </Link>
-              </Button>
-            </motion.div>
+            {/* Desktop Primary CTA Button */}
+            <Button
+              asChild
+              size="sm"
+              className="hidden sm:inline-flex font-semibold text-xs h-9 px-4.5 rounded-xl shadow-sm shadow-primary/20 group"
+            >
+              <Link href="/book">
+                <span>Book Service</span>
+                <ArrowRight className="ml-1.5 h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+              </Link>
+            </Button>
 
-            {/* Animated Hamburger / Close Button */}
-            <motion.button
+            {/* Direct High-Performance Mobile Menu Toggle (Zero-Lag Icon Transition) */}
+            <button
               type="button"
-              whileTap={{ scale: 0.92 }}
               onClick={() => setMobileMenuOpen((prev) => !prev)}
               aria-label={mobileMenuOpen ? 'Close Navigation Menu' : 'Open Navigation Menu'}
               aria-expanded={mobileMenuOpen}
-              className="lg:hidden flex h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-card/80 text-foreground hover:bg-muted/60 transition-colors shadow-xs"
+              className={cn(
+                'lg:hidden flex h-9.5 w-9.5 items-center justify-center rounded-xl border transition-colors select-none cursor-pointer',
+                mobileMenuOpen
+                  ? 'border-primary/50 bg-primary/10 text-primary'
+                  : 'border-border/80 bg-card text-foreground hover:bg-muted/60'
+              )}
             >
-              <AnimatePresence mode="wait" initial={false}>
-                {mobileMenuOpen ? (
-                  <motion.div
-                    key="close"
-                    initial={{ rotate: -90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.18 }}
-                  >
-                    <X className="h-4 w-4" />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="menu"
-                    initial={{ rotate: 90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: -90, opacity: 0 }}
-                    transition={{ duration: 0.18 }}
-                  >
-                    <Menu className="h-4 w-4" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.button>
+              {mobileMenuOpen ? (
+                <X className="h-4.5 w-4.5 transition-transform duration-200 rotate-0" />
+              ) : (
+                <Menu className="h-4.5 w-4.5 transition-transform duration-200" />
+              )}
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Mobile Drawer with Framer Motion backdrop & spring slide */}
+      {/* Lag-Free Mobile Drawer (GPU Composited Surface & Clean Backdrop Scrim) */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <>
-            {/* Backdrop Overlay */}
+          <div className="fixed inset-0 z-50 lg:hidden flex justify-end">
+            {/* Scrim Overlay */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
+              variants={drawerBackdropVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
               onClick={() => setMobileMenuOpen(false)}
-              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden"
+              className="fixed inset-0 bg-slate-950/70"
+              aria-hidden="true"
             />
 
-            {/* Slide-out Drawer Panel */}
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            {/* Solid Slide-out Drawer Panel */}
+            <motion.aside
+              variants={drawerSlideVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
               style={{ willChange: 'transform' }}
-              className="fixed top-0 right-0 bottom-0 z-50 w-[84vw] max-w-sm bg-card/95 dark:bg-card/90 backdrop-blur-2xl border-l border-border/80 shadow-2xl flex flex-col justify-between lg:hidden overflow-hidden gpu-accelerated"
+              className="relative z-10 w-[84vw] max-w-sm h-full bg-card border-l border-border/90 shadow-2xl flex flex-col justify-between overflow-hidden gpu-accelerated"
             >
-              {/* Drawer Header */}
-              <div className="p-4 sm:p-5 border-b border-border/60 flex items-center justify-between">
+              {/* Drawer Top Header */}
+              <div className="p-4 sm:p-5 border-b border-border/70 flex items-center justify-between bg-muted/20">
                 <Link
                   href="/"
                   onClick={() => setMobileMenuOpen(false)}
@@ -223,11 +235,11 @@ export function SiteHeader() {
                 >
                   <BrandLogo size="sm" />
                   <div>
-                    <span className="font-display font-bold text-sm text-foreground block">
+                    <span className="font-display font-bold text-sm text-foreground block leading-tight">
                       Sohan Pipeline&apos;s
                     </span>
                     <span className="text-[10px] text-muted-foreground block">
-                      Engineering Navigation
+                      Engineering Hub
                     </span>
                   </div>
                 </Link>
@@ -235,101 +247,89 @@ export function SiteHeader() {
                 <button
                   type="button"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                  className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
                   aria-label="Close menu"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
-              {/* Staggered Navigation Items */}
-              <div className="flex-1 overflow-y-auto px-3.5 py-4 space-y-1.5">
-                {navLinks.map((link, idx) => {
+              {/* Navigation Items List */}
+              <div className="flex-1 overflow-y-auto px-3.5 py-4 space-y-1">
+                {navLinks.map((link) => {
                   const Icon = link.icon;
                   const active = isActive(link.href);
                   return (
-                    <motion.div
+                    <Link
                       key={link.href}
-                      initial={{ opacity: 0, x: 16 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.04 + idx * 0.03, duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                      href={link.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        'flex items-center justify-between p-3 rounded-xl transition-colors duration-150',
+                        active
+                          ? 'bg-primary/10 text-primary font-semibold border border-primary/30'
+                          : 'text-foreground hover:bg-muted/60 border border-transparent'
+                      )}
                     >
-                      <Link
-                        href={link.href}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={cn(
-                          'flex items-center justify-between p-3 rounded-xl transition-colors duration-150',
-                          active
-                            ? 'bg-primary/10 text-primary font-semibold border border-primary/30 shadow-xs'
-                            : 'text-foreground hover:bg-muted/60 hover:text-foreground border border-transparent'
-                        )}
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div
-                            className={cn(
-                              'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
-                              active ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                            )}
-                          >
-                            <Icon className="h-4 w-4" />
-                          </div>
-                          <div className="truncate">
-                            <span className="text-xs sm:text-sm font-semibold block leading-tight">
-                              {link.label}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground block truncate mt-0.5 font-normal tracking-normal">
-                              {link.description}
-                            </span>
-                          </div>
-                        </div>
-
-                        <ChevronRight
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div
                           className={cn(
-                            'h-4 w-4 shrink-0 transition-transform',
-                            active ? 'text-primary' : 'text-muted-foreground'
+                            'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors',
+                            active ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                           )}
-                        />
-                      </Link>
-                    </motion.div>
+                        >
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="truncate">
+                          <span className="text-xs sm:text-sm font-semibold block leading-tight">
+                            {link.label}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground block truncate mt-0.5">
+                            {link.description}
+                          </span>
+                        </div>
+                      </div>
+
+                      <ChevronRight
+                        className={cn(
+                          'h-4 w-4 shrink-0 transition-colors',
+                          active ? 'text-primary' : 'text-muted-foreground'
+                        )}
+                      />
+                    </Link>
                   );
                 })}
 
                 {/* FAQ Extra Link */}
-                <motion.div
-                  initial={{ opacity: 0, x: 16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.04 + navLinks.length * 0.03, duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                <Link
+                  href="/faq"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cn(
+                    'flex items-center justify-between p-3 rounded-xl transition-colors duration-150',
+                    isActive('/faq')
+                      ? 'bg-primary/10 text-primary font-semibold border border-primary/30'
+                      : 'text-foreground hover:bg-muted/60 border border-transparent'
+                  )}
                 >
-                  <Link
-                    href="/faq"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={cn(
-                      'flex items-center justify-between p-3 rounded-xl transition-colors duration-150',
-                      isActive('/faq')
-                        ? 'bg-primary/10 text-primary font-semibold border border-primary/30'
-                        : 'text-foreground hover:bg-muted/60 border border-transparent'
-                    )}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                        <HelpCircle className="h-4 w-4" />
-                      </div>
-                      <div className="truncate">
-                        <span className="text-xs sm:text-sm font-semibold block leading-tight">
-                          Frequently Asked Questions
-                        </span>
-                        <span className="text-[10px] text-muted-foreground block truncate mt-0.5 font-normal tracking-normal">
-                          Warranty, Pricing &amp; Waterlines
-                        </span>
-                      </div>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                      <HelpCircle className="h-4 w-4" />
                     </div>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  </Link>
-                </motion.div>
+                    <div className="truncate">
+                      <span className="text-xs sm:text-sm font-semibold block leading-tight">
+                        Help &amp; FAQ
+                      </span>
+                      <span className="text-[10px] text-muted-foreground block truncate mt-0.5">
+                        Warranty, Rates &amp; Cleanout Procedures
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </Link>
               </div>
 
-              {/* Drawer Bottom Controls */}
-              <div className="p-4 border-t border-border/60 space-y-3 bg-muted/20">
+              {/* Bottom Drawer Actions */}
+              <div className="p-4 border-t border-border/70 space-y-3 bg-muted/30">
                 <div className="flex items-center justify-between px-1 text-xs font-medium text-muted-foreground">
                   <span className="flex items-center gap-1.5">
                     <Sparkles className="h-3.5 w-3.5 text-primary" />
@@ -353,8 +353,8 @@ export function SiteHeader() {
                   <span>Call Hotline: {businessInfo.phoneDisplay}</span>
                 </a>
               </div>
-            </motion.div>
-          </>
+            </motion.aside>
+          </div>
         )}
       </AnimatePresence>
     </>

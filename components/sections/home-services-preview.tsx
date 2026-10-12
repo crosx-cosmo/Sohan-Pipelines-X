@@ -173,7 +173,7 @@ export function HomeServicesPreview() {
                         </div>
 
                         <Button asChild size="sm" className="text-xs font-semibold h-8.5 rounded-lg group/btn shadow-xs">
-                          <Link href="/book">
+                          <Link href={`/book?service=${service.id}`}>
                             Book Service
                             <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover/btn:translate-x-0.5" />
                           </Link>

@@ -46,9 +46,9 @@ export default function NotFound() {
           transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
           className="text-center space-y-4 max-w-xl mx-auto"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider">
+          <div className="flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-[0.065em] text-primary">
             <ShieldAlert className="h-3.5 w-3.5" />
-            <span>Pipeline Pressure Failure</span>
+            <span>Pipeline Pressure Diagnostics · Route Not Found</span>
           </div>
 
           <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-foreground leading-tight">

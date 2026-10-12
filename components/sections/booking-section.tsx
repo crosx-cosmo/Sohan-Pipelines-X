@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import {
@@ -36,6 +37,7 @@ import { cn } from '@/lib/utils';
 import { URGENCY_LEVELS, urgencyLabel, type UrgencyLevel } from '@/lib/booking-status';
 import { findOrCreateCustomer, createBooking } from '@/lib/booking-service';
 import { CustomSelect, type SelectOption } from '@/components/ui/custom-select';
+import { luxuryEasing } from '@/lib/motion';
 
 type BookingStep = 'service' | 'urgency' | 'details' | 'location' | 'schedule' | 'confirm' | 'success';
 
@@ -69,9 +71,18 @@ const urgencyIcons: Record<UrgencyLevel, typeof AlertTriangle> = {
   routine: CalendarClock,
 };
 
-export function BookingSection() {
-  const [step, setStep] = React.useState<BookingStep>('service');
-  const [data, setData] = React.useState<BookingData>(initialData);
+function BookingWizard() {
+  const searchParams = useSearchParams();
+  const initialService = React.useMemo(() => {
+    const serviceParam = searchParams.get('service');
+    return serviceParam ? services.find((s) => s.id === serviceParam) || null : null;
+  }, [searchParams]);
+
+  const [step, setStep] = React.useState<BookingStep>(initialService ? 'urgency' : 'service');
+  const [data, setData] = React.useState<BookingData>(() => ({
+    ...initialData,
+    service: initialService,
+  }));
   const [submitting, setSubmitting] = React.useState(false);
   const [bookingId, setBookingId] = React.useState('');
 
@@ -770,5 +781,20 @@ export function BookingSection() {
         </AnimatePresence>
       </div>
     </section>
+  );
+}
+
+export function BookingSection() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="py-24 text-center">
+          <Loader2 className="h-7 w-7 animate-spin mx-auto text-primary mb-3" />
+          <p className="text-xs text-muted-foreground font-medium">Initializing Secure Booking Console...</p>
+        </div>
+      }
+    >
+      <BookingWizard />
+    </React.Suspense>
   );
 }

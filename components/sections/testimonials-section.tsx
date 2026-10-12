@@ -12,7 +12,7 @@ export function TestimonialsSection() {
     <section className="py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <div className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary mb-3">
+          <div className="flex items-center justify-center gap-2 text-xs font-semibold text-primary mb-3">
             <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
             <span className="tabular-nums font-mono font-bold text-foreground">{businessInfo.rating} Out of 5.0</span>
             <span aria-hidden="true" className="text-border">·</span>

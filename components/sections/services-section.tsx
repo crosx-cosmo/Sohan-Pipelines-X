@@ -198,7 +198,7 @@ export function ServicesSection() {
                           size="sm"
                           className="text-xs font-semibold h-9 px-4 rounded-xl group/btn shadow-xs"
                         >
-                          <Link href="/book">
+                          <Link href={`/book?service=${service.id}`}>
                             Book Service
                             <ArrowRight className="ml-1.5 h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-0.5" />
                           </Link>

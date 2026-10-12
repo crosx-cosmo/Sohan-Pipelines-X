@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import {
@@ -31,8 +32,10 @@ import {
 } from '@/lib/booking-status';
 import { findBooking, type BookingLookupResult } from '@/lib/booking-service';
 
-export function FindBookingSection() {
-  const [bookingId, setBookingId] = React.useState('');
+function FindBookingContent() {
+  const searchParams = useSearchParams();
+  const initialId = searchParams.get('id') || searchParams.get('bookingId') || '';
+  const [bookingId, setBookingId] = React.useState(initialId);
   const [phone, setPhone] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [searched, setSearched] = React.useState(false);
@@ -285,5 +288,20 @@ export function FindBookingSection() {
         </AnimatePresence>
       </div>
     </section>
+  );
+}
+
+export function FindBookingSection() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="py-20 text-center">
+          <Loader2 className="h-7 w-7 animate-spin mx-auto text-primary mb-3" />
+          <p className="text-xs text-muted-foreground font-medium">Loading Booking Verification System...</p>
+        </div>
+      }
+    >
+      <FindBookingContent />
+    </React.Suspense>
   );
 }
