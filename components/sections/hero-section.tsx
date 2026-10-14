@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import {
@@ -19,7 +20,7 @@ import {
   MapPin,
   Copy,
   Check,
-  ChevronRight,
+  Activity,
   Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,7 +29,6 @@ import { HeroPipelineVisual } from '@/components/hero-pipeline-visual';
 import {
   luxuryEasing,
   fadeUpVariants,
-  transitionPresets,
 } from '@/lib/motion';
 
 const featuredHeroServices = [
@@ -68,14 +68,14 @@ const featuredHeroServices = [
 
 export function HeroSection() {
   const [activeTab, setActiveTab] = React.useState(0);
-  const [consoleView, setConsoleView] = React.useState<'estimator' | 'pipeline'>('estimator');
+  const [consoleView, setConsoleView] = React.useState<'estimator' | 'pipeline' | 'gallery'>('estimator');
   const [copied, setCopied] = React.useState(false);
 
   const handleSelectService = (index: number) => {
     setActiveTab(index);
     const service = featuredHeroServices[index];
     toast.info(`Selected: ${service.name}`, {
-      description: `Starting at ₹${service.price} · Fast dispatch within ${service.time}`,
+      description: `Starting at ₹${service.price} · Typical dispatch in ${service.time}`,
     });
   };
 
@@ -103,7 +103,7 @@ export function HeroSection() {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-14 items-center">
-          {/* Left Column: Architectural Editorial Presentation */}
+          {/* Left Column: Architectural Editorial Presentation (col-span-7) */}
           <motion.div
             variants={fadeUpVariants}
             initial="hidden"
@@ -128,17 +128,17 @@ export function HeroSection() {
 
             {/* Display Headline with High-Contrast Editorial Authority */}
             <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-bold tracking-tight sm:tracking-[-0.028em] text-foreground leading-[1.12] text-balance">
-              Engineered Precision for Every Pipeline &amp;{' '}
+              Precision Pipeline Engineering &amp;{' '}
               <span className="text-primary relative inline-block">
-                Plumbing System.
+                Master Plumbing Solutions.
               </span>
             </h1>
 
             {/* Narrative Prose */}
             <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl text-pretty font-normal tracking-[0.002em]">
-              From concealed residential leak diagnostics to industrial pipeline architecture,
-              sanitary installations, and pressurized booster storage. Delivered by
-              licensed master technicians with guaranteed materials and upfront price approval.
+              Serving residential homes, apartments, and commercial facilities across Dantan,
+              Kharagpur, and Midnapore. Specialized in concealed leak diagnosis, CPVC/UPVC
+              pipeline networks, sanitary bathroom fittings, and pressurized water storage.
             </p>
 
             {/* High-Intent Conversion Controls */}
@@ -208,7 +208,7 @@ export function HeroSection() {
             </div>
           </motion.div>
 
-          {/* Right Column: World-Class Interactive Dispatch Console */}
+          {/* Right Column: Interactive Dispatch Console (col-span-5) */}
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -238,11 +238,11 @@ export function HeroSection() {
               </div>
 
               {/* View Switcher Tabs */}
-              <div className="mt-4 flex items-center gap-1.5 p-1 rounded-xl bg-muted/60 border border-border/60">
+              <div className="mt-4 flex items-center gap-1 p-1 rounded-xl bg-muted/60 border border-border/60">
                 <button
                   type="button"
                   onClick={() => setConsoleView('estimator')}
-                  className={`relative flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-colors cursor-pointer select-none ${
+                  className={`relative flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer select-none text-center ${
                     consoleView === 'estimator'
                       ? 'text-foreground font-bold'
                       : 'text-muted-foreground hover:text-foreground'
@@ -255,12 +255,12 @@ export function HeroSection() {
                       className="absolute inset-0 rounded-lg bg-card shadow-xs border border-border/80 -z-10"
                     />
                   )}
-                  Quick Estimator
+                  Estimator
                 </button>
                 <button
                   type="button"
                   onClick={() => setConsoleView('pipeline')}
-                  className={`relative flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-colors cursor-pointer select-none ${
+                  className={`relative flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer select-none text-center ${
                     consoleView === 'pipeline'
                       ? 'text-foreground font-bold'
                       : 'text-muted-foreground hover:text-foreground'
@@ -273,12 +273,30 @@ export function HeroSection() {
                       className="absolute inset-0 rounded-lg bg-card shadow-xs border border-border/80 -z-10"
                     />
                   )}
-                  Hydraulic Topology
+                  Topology
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConsoleView('gallery')}
+                  className={`relative flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer select-none text-center ${
+                    consoleView === 'gallery'
+                      ? 'text-foreground font-bold'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {consoleView === 'gallery' && (
+                    <motion.span
+                      layoutId="consoleViewActivePill"
+                      transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                      className="absolute inset-0 rounded-lg bg-card shadow-xs border border-border/80 -z-10"
+                    />
+                  )}
+                  Standards
                 </button>
               </div>
 
               <AnimatePresence mode="wait">
-                {consoleView === 'pipeline' ? (
+                {consoleView === 'pipeline' && (
                   <motion.div
                     key="pipeline"
                     initial={{ opacity: 0, scale: 0.98 }}
@@ -289,7 +307,56 @@ export function HeroSection() {
                   >
                     <HeroPipelineVisual />
                   </motion.div>
-                ) : (
+                )}
+
+                {consoleView === 'gallery' && (
+                  <motion.div
+                    key="gallery"
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ duration: 0.22, ease: luxuryEasing }}
+                    className="py-4 space-y-3"
+                  >
+                    <div className="relative h-44 rounded-2xl overflow-hidden border border-border/70 group">
+                      <Image
+                        src="https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&w=800&q=80"
+                        alt="High-grade industrial pipeline engineering"
+                        fill
+                        referrerPolicy="no-referrer"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/30 to-transparent flex flex-col justify-end p-4">
+                        <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-sky-400">
+                          Astral &amp; Supreme Certified
+                        </span>
+                        <h4 className="text-white text-sm font-bold leading-tight">
+                          Commercial Pressure Fusion &amp; Manifold Assembly
+                        </h4>
+                        <p className="text-slate-300 text-[11px] mt-0.5">
+                          Concealed wall runs hydro-tested before plaster sealing.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-3 rounded-xl bg-muted/40 border border-border/60">
+                        <span className="font-semibold text-foreground block">Zero Joint Leakage</span>
+                        <span className="text-[11px] text-muted-foreground block mt-0.5">
+                          High-temp solvent weld standard
+                        </span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-muted/40 border border-border/60">
+                        <span className="font-semibold text-foreground block">Heavy-Gauge Brass</span>
+                        <span className="text-[11px] text-muted-foreground block mt-0.5">
+                          Forged ISI isolation valves
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {consoleView === 'estimator' && (
                   /* Estimator View */
                   <motion.div
                     key="estimator"
@@ -384,7 +451,7 @@ export function HeroSection() {
                   className="font-medium text-foreground hover:text-primary transition-colors flex items-center gap-1"
                 >
                   <span>10 Hubs</span>
-                  <ChevronRight className="h-3 w-3" />
+                  <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
             </div>

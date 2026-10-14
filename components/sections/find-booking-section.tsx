@@ -15,7 +15,13 @@ import {
   AlertTriangle,
   CheckCircle2,
   XCircle,
+  Printer,
+  MessageSquare,
+  Sparkles,
+  ArrowRight,
+  RotateCw,
 } from 'lucide-react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,7 +36,7 @@ import {
   isBookingStatus,
   urgencyLabel,
 } from '@/lib/booking-status';
-import { findBooking, type BookingLookupResult } from '@/lib/booking-service';
+import { findBooking, getLatestLocalBooking, type BookingLookupResult, type LocalBooking } from '@/lib/booking-service';
 
 function FindBookingContent() {
   const searchParams = useSearchParams();
@@ -40,22 +46,41 @@ function FindBookingContent() {
   const [loading, setLoading] = React.useState(false);
   const [searched, setSearched] = React.useState(false);
   const [result, setResult] = React.useState<BookingLookupResult | null>(null);
+  const [recentBooking, setRecentBooking] = React.useState<LocalBooking | null>(null);
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!bookingId.trim() || !phone.trim()) {
-      toast.error('Please enter both your Booking ID and phone number.');
+  // Check device for recently created bookings
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      const latest = getLatestLocalBooking();
+      if (latest) {
+        setRecentBooking(latest);
+        if (!initialId) {
+          setBookingId(latest.bookingId);
+        }
+        if (latest.phone) {
+          setPhone(latest.phone);
+        }
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [initialId]);
+
+  const executeLookup = React.useCallback(async (bId: string, ph: string) => {
+    const cleanId = bId.trim();
+    const cleanPhone = ph.trim();
+    if (!cleanId || !cleanPhone) {
+      toast.error('Please enter both your Booking ID and registered phone number.');
       return;
     }
 
     setLoading(true);
     setSearched(false);
     try {
-      const found = await findBooking(bookingId, phone);
+      const found = await findBooking(cleanId, cleanPhone);
       setResult(found);
       setSearched(true);
       if (!found) {
-        toast.error("We couldn't find a booking matching those details.");
+        toast.error("We couldn't find an active booking matching those credentials.");
       } else {
         toast.success(`Booking ${found.bookingId} Loaded`, {
           description: `Current status: ${bookingStatusLabel(found.status)}`,
@@ -66,16 +91,50 @@ function FindBookingContent() {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'Something went wrong while looking up your booking.'
+          : 'Unable to communicate with booking verification service.'
       );
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    executeLookup(bookingId, phone);
+  };
+
+  const handleUseRecent = (recent: LocalBooking) => {
+    setBookingId(recent.bookingId);
+    setPhone(recent.phone);
+    executeLookup(recent.bookingId, recent.phone);
   };
 
   return (
     <section className="py-16 lg:py-20">
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 space-y-8">
+        {/* Recent booking convenience chip */}
+        {recentBooking && !result && (
+          <div className="flex items-center justify-between p-3.5 rounded-xl border border-primary/20 bg-primary/5 text-xs">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary shrink-0" />
+              <span>
+                Recent booking on this device:{' '}
+                <strong className="text-foreground">{recentBooking.bookingId}</strong> ({recentBooking.serviceName})
+              </span>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => handleUseRecent(recentBooking)}
+              className="text-xs h-7 rounded-lg border-primary/30 text-primary hover:bg-primary/10"
+            >
+              Autofill &amp; Check
+              <ArrowRight className="ml-1 h-3 w-3" />
+            </Button>
+          </div>
+        )}
+
         <Card className="border-border/60">
           <CardContent className="pt-6">
             <form onSubmit={handleSearch} className="space-y-4">
@@ -84,36 +143,41 @@ function FindBookingContent() {
                   <Label htmlFor="bookingId">Booking ID *</Label>
                   <Input
                     id="bookingId"
-                    placeholder="e.g. SP-20260922-A7K9Q2"
+                    placeholder="e.g. SOP-123456"
                     value={bookingId}
                     onChange={(e) => setBookingId(e.target.value)}
                     autoCapitalize="characters"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lookupPhone">Phone Number *</Label>
+                  <Label htmlFor="lookupPhone">Registered Phone Number *</Label>
                   <Input
                     id="lookupPhone"
                     type="tel"
-                    placeholder="The number you booked with"
+                    placeholder="e.g. 8670143003"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                   />
                 </div>
               </div>
-              <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Searching...
-                  </>
-                ) : (
-                  <>
-                    <Search className="mr-2 h-4 w-4" />
-                    Find My Booking
-                  </>
-                )}
-              </Button>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button type="submit" disabled={loading} className="w-full sm:w-auto">
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Verifying with Dispatch...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="mr-2 h-4 w-4" />
+                      Find My Booking
+                    </>
+                  )}
+                </Button>
+                <Button asChild variant="ghost" size="sm" className="text-xs">
+                  <Link href="/book">Need to schedule a new visit?</Link>
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>
@@ -273,14 +337,68 @@ function FindBookingContent() {
                 )}
               </div>
 
-              <p className="text-xs text-muted-foreground pt-2 border-t">
-                Booked on{' '}
-                {new Date(result.createdAt).toLocaleDateString('en-IN', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                })}
-              </p>
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t text-xs text-muted-foreground">
+                <p>
+                  Booked on{' '}
+                  {new Date(result.createdAt).toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                  })}
+                </p>
+                <p className="text-[11px] font-mono text-muted-foreground/80">
+                  Ref: {result.bookingId}
+                </p>
+              </div>
+
+              {/* Action Toolbar */}
+              <div className="flex flex-wrap items-center gap-2.5 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.print()}
+                  className="rounded-xl text-xs font-medium"
+                >
+                  <Printer className="mr-1.5 h-3.5 w-3.5" />
+                  Print Work Order
+                </Button>
+
+                <Button
+                  asChild
+                  size="sm"
+                  className="rounded-xl text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  <a
+                    href={`https://wa.me/918670143003?text=${encodeURIComponent(
+                      `Hello Sohan Pipeline's & Plumbing, inquiring about Booking ${result.bookingId} (${result.serviceName}). Please provide the latest technician dispatch update.`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
+                    WhatsApp Support
+                  </a>
+                </Button>
+
+                <Button asChild variant="outline" size="sm" className="rounded-xl text-xs font-medium">
+                  <a href={`tel:${businessInfo.phone}`}>
+                    <Phone className="mr-1.5 h-3.5 w-3.5" />
+                    Call Dispatch
+                  </a>
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => executeLookup(result.bookingId, phone)}
+                  className="rounded-xl text-xs ml-auto"
+                >
+                  <RotateCw className="mr-1.5 h-3 w-3" />
+                  Refresh
+                </Button>
+              </div>
             </CardContent>
           </Card>
             </motion.div>

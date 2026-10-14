@@ -50,7 +50,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ServiceAreasPage() {
+import { fetchLiveServiceAreas } from '@/lib/supabase-data';
+
+export default async function ServiceAreasPage() {
+  const { data: liveAreas } = await fetchLiveServiceAreas();
+
   const serviceAreasSchema = {
     '@context': 'https://schema.org',
     '@type': 'Service',
@@ -61,9 +65,9 @@ export default function ServiceAreasPage() {
       name: businessInfo.name,
       telephone: businessInfo.phone,
     },
-    areaServed: businessInfo.serviceAreas.map((area) => ({
+    areaServed: (liveAreas || []).map((area) => ({
       '@type': 'City',
-      name: area,
+      name: `${area.locality}, ${area.district}`,
       containedInPlace: {
         '@type': 'AdministrativeArea',
         name: 'West Bengal',

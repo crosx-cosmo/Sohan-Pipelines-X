@@ -266,14 +266,14 @@ svg {
 
 /* Hardware accelerated transform container for zero blur & 60/120fps rendering */
 .render-crisp {
-  transform: translateZ(0);
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .gpu-accelerated {
-  transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
-  will-change: transform, opacity;
+  -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
 }
 
 /* Butter-smooth interactive hover transitions */
@@ -376,4 +376,29 @@ svg {
 
 .animate-accordion-up {
   animation: accordion-up 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Enterprise Print Voucher & Work-Order Styles */
+@media print {
+  header,
+  footer,
+  nav,
+  aside,
+  .mobile-quick-bar,
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 12pt;
+  }
+
+  .card,
+  [class*="Card"] {
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+  }
 }

@@ -46,19 +46,23 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ServicesPage() {
+import { fetchLiveServices } from '@/lib/supabase-data';
+
+export default async function ServicesPage() {
+  const { data: liveServices } = await fetchLiveServices();
+
   const serviceListSchema = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     name: 'Plumbing Services Catalogue',
     description: 'Professional residential and commercial plumbing services in Midnapore region.',
-    itemListElement: services.map((s, index) => ({
+    itemListElement: (liveServices || []).map((s, index) => ({
       '@type': 'ListItem',
       position: index + 1,
       item: {
         '@type': 'Service',
         name: s.name,
-        description: s.description,
+        description: s.description || 'Certified plumbing services.',
         provider: {
           '@type': 'Plumber',
           name: "Sohan Pipeline's & Plumbing",
@@ -66,7 +70,7 @@ export default function ServicesPage() {
         },
         offers: {
           '@type': 'Offer',
-          price: s.startingPrice.toString(),
+          price: s.price.toString(),
           priceCurrency: 'INR',
         },
       },

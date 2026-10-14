@@ -6,6 +6,7 @@ import { ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface SelectOption {
+  key?: string;
   value: string;
   label: string;
   description?: string;
@@ -251,7 +252,7 @@ export function CustomSelect({
 
                 return (
                   <li
-                    key={option.value || `empty-${index}`}
+                    key={option.key || `${option.value || 'opt'}-${index}`}
                     role="option"
                     aria-selected={isSelected}
                     onClick={() => handleSelect(option.value)}
