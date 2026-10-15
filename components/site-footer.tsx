@@ -238,7 +238,7 @@ export function SiteFooter() {
           </div>
           <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
             {businessInfo.serviceAreas.map((town, idx) => (
-              <span key={town} className="inline-flex items-center">
+              <span key={`${town}-${idx}`} className="inline-flex items-center">
                 <Link
                   href="/service-areas"
                   className="hover:text-primary transition-colors hover:underline"

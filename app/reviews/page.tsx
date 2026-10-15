@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { PageLayout } from '@/components/page-layout';
 import { PageHeader } from '@/components/page-header';
 import { TestimonialsSection } from '@/components/sections/testimonials-section';
-import { businessInfo, testimonials } from '@/lib/business-info';
+import { businessInfo } from '@/lib/business-info';
 import { SITE_LOGO_URL } from '@/lib/site-logo';
 
 export const metadata: Metadata = {
@@ -50,27 +50,13 @@ export default function ReviewsPage() {
     name: businessInfo.name,
     image: SITE_LOGO_URL,
     telephone: businessInfo.phone,
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: businessInfo.rating.toString(),
-      bestRating: '5',
-      worstRating: '1',
-      ratingCount: businessInfo.reviewCount.toString(),
-      reviewCount: businessInfo.reviewCount.toString(),
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: businessInfo.address,
+      addressLocality: 'Midnapore',
+      addressRegion: 'West Bengal',
+      addressCountry: 'IN',
     },
-    review: testimonials.map((t) => ({
-      '@type': 'Review',
-      author: {
-        '@type': 'Person',
-        name: t.name,
-      },
-      reviewRating: {
-        '@type': 'Rating',
-        ratingValue: t.rating.toString(),
-        bestRating: '5',
-      },
-      reviewBody: t.text,
-    })),
   };
 
   return (
@@ -81,8 +67,8 @@ export default function ReviewsPage() {
       />
       <PageHeader
         badge="Customer Reviews"
-        title="What Our Customers Say"
-        description="Real reviews from real customers across Midnapore and nearby areas. We are proud of our 5.0 rating from 21+ satisfied customers."
+        title="Customer Reviews & Ratings"
+        description="Authentic service ratings and feedback from homeowners and commercial facilities across Midnapore and South Bengal, verified through our service system."
         breadcrumbPath="/reviews"
       />
       <TestimonialsSection />

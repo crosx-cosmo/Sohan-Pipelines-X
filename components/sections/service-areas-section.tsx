@@ -233,7 +233,7 @@ export function ServiceAreasSection() {
                 <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
                   {districtAreas.map((area, idx) => (
                     <motion.div
-                      key={area.id}
+                      key={`${area.id || area.locality}-${idx}`}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2, delay: idx * 0.02 }}

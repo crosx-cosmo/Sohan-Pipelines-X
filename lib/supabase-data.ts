@@ -153,3 +153,51 @@ export async function fetchLiveServiceAreas(): Promise<{ data: DbServiceArea[]; 
     };
   }
 }
+
+/**
+ * Schema representing customer review records in Supabase:
+ * - id: uuid or string
+ * - name: text (customer name)
+ * - rating: number (1 to 5)
+ * - comment / text: review content
+ * - service: text (optional service name)
+ * - location / city: text (optional locality)
+ * - verified: boolean (verified job flag supported by real records)
+ * - created_at: timestamptz
+ */
+export interface DbReview {
+  id: string;
+  name: string;
+  rating: number;
+  text?: string | null;
+  comment?: string | null;
+  service?: string | null;
+  location?: string | null;
+  verified?: boolean;
+  created_at?: string;
+}
+
+/**
+ * Fetch genuine reviews directly from the live Supabase data source.
+ * If no review table or genuine records exist in the database, returns an empty array cleanly.
+ */
+export async function fetchLiveReviews(): Promise<{ data: DbReview[]; error: string | null }> {
+  try {
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('id, name, rating, comment, text, service, location, verified, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      return { data: [], error: error.message };
+    }
+
+    return { data: (data as DbReview[]) ?? [], error: null };
+  } catch (err) {
+    return {
+      data: [],
+      error: err instanceof Error ? err.message : 'Failed to connect to Supabase reviews table',
+    };
+  }
+}
+

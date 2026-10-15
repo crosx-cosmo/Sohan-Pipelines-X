@@ -34,7 +34,7 @@ import {
 const navLinks = [
   { href: '/services', label: 'Services', icon: Wrench, description: '12 Certified Engineering Disciplines' },
   { href: '/about', label: 'About', icon: Users, description: 'Master Plumber Experience & Standards' },
-  { href: '/reviews', label: 'Reviews', icon: Star, description: `${businessInfo.reviewCount} Verified 5.0★ Testimonials` },
+  { href: '/reviews', label: 'Reviews', icon: Star, description: 'Verified Client Feedback & Ratings' },
   { href: '/service-areas', label: 'Service Areas', icon: MapPin, description: 'Paschim & Purba Medinipur Coverage' },
   { href: '/find-booking', label: 'Track Booking', icon: Search, description: 'Live Status & Job Verification' },
   { href: '/contact', label: 'Contact', icon: MessageSquare, description: '24/7 Emergency Dispatch Line' },
@@ -246,7 +246,10 @@ export function SiteHeader() {
       {/* Robust, Fully-Engineered Mobile Navigation Drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <div key="mobile-drawer-portal" className="fixed inset-0 z-50 lg:hidden pointer-events-auto">
+          <div
+            key="mobile-drawer-portal"
+            className="fixed inset-0 z-50 lg:hidden flex justify-end pointer-events-auto overflow-hidden"
+          >
             {/* Standalone Backdrop Overlay */}
             <motion.div
               key="mobile-drawer-backdrop"
@@ -255,11 +258,11 @@ export function SiteHeader() {
               animate="visible"
               exit="hidden"
               onClick={() => setMobileMenuOpen(false)}
-              className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs cursor-pointer"
+              className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs cursor-pointer z-0"
               aria-hidden="true"
             />
 
-            {/* Fixed Edge-Anchored Slide-In Panel (Responsive width, never collapses) */}
+            {/* Fixed Edge-Anchored Slide-In Panel (Responsive width, stays anchored to the right) */}
             <motion.aside
               key="mobile-drawer-panel"
               variants={drawerSlideVariants}
@@ -270,7 +273,7 @@ export function SiteHeader() {
               role="dialog"
               aria-modal="true"
               aria-label="Mobile Navigation Menu"
-              className="absolute top-0 right-0 bottom-0 w-[85vw] max-w-[360px] min-w-[275px] h-full bg-card border-l border-border/80 shadow-2xl flex flex-col justify-between overflow-hidden shrink-0 select-none"
+              className="relative z-10 w-[86vw] max-w-[380px] min-w-[280px] h-full bg-card border-l border-border/80 shadow-2xl flex flex-col justify-between overflow-hidden shrink-0 select-none"
             >
               {/* Drawer Top Header with Logo and Close Button */}
               <div className="p-4 sm:p-5 border-b border-border/70 flex items-center justify-between bg-muted/20 shrink-0">
@@ -306,7 +309,7 @@ export function SiteHeader() {
               </div>
 
               {/* Scrollable Navigation Body */}
-              <div className="flex-1 overflow-y-auto px-3.5 py-3 space-y-1.5">
+              <div className="flex-1 overflow-y-auto overscroll-contain px-3.5 py-3 space-y-1.5">
                 {/* 24/7 Dispatch Status Banner */}
                 <div className="p-3 mb-2 rounded-xl bg-primary/5 border border-primary/20 flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs">
@@ -360,7 +363,7 @@ export function SiteHeader() {
                           <span className="text-sm font-semibold block leading-tight text-foreground group-hover:text-primary transition-colors">
                             {link.label}
                           </span>
-                          <span className="text-[11px] text-muted-foreground block truncate mt-0.5 font-normal">
+                          <span className="text-[11px] text-muted-foreground block line-clamp-1 mt-0.5 font-normal">
                             {link.description}
                           </span>
                         </div>
@@ -395,7 +398,7 @@ export function SiteHeader() {
                       <span className="text-sm font-semibold block leading-tight text-foreground group-hover:text-primary transition-colors">
                         Help &amp; FAQ
                       </span>
-                      <span className="text-[11px] text-muted-foreground block truncate mt-0.5 font-normal">
+                      <span className="text-[11px] text-muted-foreground block line-clamp-1 mt-0.5 font-normal">
                         Warranty, Rates &amp; Cleanout Procedures
                       </span>
                     </div>

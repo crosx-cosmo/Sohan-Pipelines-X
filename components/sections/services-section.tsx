@@ -27,6 +27,7 @@ import {
 } from '@/lib/supabase-data';
 import { businessInfo } from '@/lib/business-info';
 import { cn } from '@/lib/utils';
+import { ServiceEstimator } from '@/components/service-estimator';
 
 type CategoryFilter = 'all' | 'residential' | 'commercial' | 'emergency' | 'installation' | 'maintenance';
 
@@ -396,6 +397,9 @@ export function ServicesSection() {
             </AnimatePresence>
           </div>
         )}
+
+        {/* Instant Pricing Estimator & Dispatch Calculator */}
+        <ServiceEstimator className="mt-14" />
 
         {/* Custom jobs prompt */}
         <div className="mt-14 text-center rounded-2xl border border-border/70 bg-muted/30 p-8 max-w-2xl mx-auto shadow-crisp-xs">

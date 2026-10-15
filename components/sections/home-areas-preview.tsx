@@ -242,9 +242,9 @@ export function HomeAreasPreview() {
                   </p>
 
                   <div className="flex flex-wrap gap-2 mb-6">
-                    {districtAreas.map((area) => (
+                    {districtAreas.map((area, idx) => (
                       <span
-                        key={area.id}
+                        key={`${area.id || area.locality}-${idx}`}
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-muted/60 text-foreground border border-border/50"
                       >
                         <MapPin className="h-3 w-3 text-primary shrink-0" />

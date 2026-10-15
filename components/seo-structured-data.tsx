@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { businessInfo, testimonials } from '@/lib/business-info';
+import { businessInfo } from '@/lib/business-info';
 import { services } from '@/lib/services';
 import { SITE_LOGO_URL } from '@/lib/site-logo';
 
@@ -59,32 +59,6 @@ export function SeoStructuredData() {
       areaServed: 'IN',
       availableLanguage: ['English', 'Bengali', 'Hindi'],
     },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: businessInfo.rating.toString(),
-      bestRating: '5',
-      worstRating: '1',
-      ratingCount: businessInfo.reviewCount.toString(),
-      reviewCount: businessInfo.reviewCount.toString(),
-    },
-    review: testimonials.map((t) => ({
-      '@type': 'Review',
-      author: {
-        '@type': 'Person',
-        name: t.name,
-      },
-      reviewRating: {
-        '@type': 'Rating',
-        ratingValue: t.rating.toString(),
-        bestRating: '5',
-        worstRating: '1',
-      },
-      reviewBody: t.text,
-      itemReviewed: {
-        '@type': 'Plumber',
-        name: businessInfo.name,
-      },
-    })),
     areaServed: businessInfo.serviceAreas.map((area) => ({
       '@type': 'City',
       name: area,
