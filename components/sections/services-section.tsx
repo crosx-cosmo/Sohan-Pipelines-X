@@ -11,7 +11,6 @@ import {
   ShieldCheck,
   Wrench,
   Sparkles,
-  Database,
   RefreshCw,
   AlertTriangle,
   Loader2,
@@ -20,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   fetchLiveServices,
+  getCachedServices,
   getServiceIcon,
   getServiceCategory,
   getServiceFeatures,
@@ -27,7 +27,7 @@ import {
 } from '@/lib/supabase-data';
 import { businessInfo } from '@/lib/business-info';
 import { cn } from '@/lib/utils';
-import { ServiceEstimator } from '@/components/service-estimator';
+import { HowOurServiceWorks } from '@/components/how-our-service-works';
 
 type CategoryFilter = 'all' | 'residential' | 'commercial' | 'emergency' | 'installation' | 'maintenance';
 
@@ -41,8 +41,8 @@ const categories: { id: CategoryFilter; label: string }[] = [
 ];
 
 export function ServicesSection() {
-  const [servicesList, setServicesList] = React.useState<DbService[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const [servicesList, setServicesList] = React.useState<DbService[]>(() => getCachedServices() ?? []);
+  const [loading, setLoading] = React.useState(() => !getCachedServices());
   const [error, setError] = React.useState<string | null>(null);
   const [activeCategory, setActiveCategory] = React.useState<CategoryFilter>('all');
   const [expandedCardIds, setExpandedCardIds] = React.useState<string[]>([]);
@@ -337,7 +337,7 @@ export function ServicesSection() {
 
                                 <div className="pt-2 border-t border-border/50 space-y-1.5 text-[11px] text-muted-foreground">
                                   <div className="flex items-center justify-between">
-                                    <span>Database Record ID:</span>
+                                    <span>Service Reference:</span>
                                     <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[180px]">
                                       {service.id}
                                     </span>
@@ -398,8 +398,8 @@ export function ServicesSection() {
           </div>
         )}
 
-        {/* Instant Pricing Estimator & Dispatch Calculator */}
-        <ServiceEstimator className="mt-14" />
+        {/* How Our Plumbing Service Works (4-Step Engineering Protocol) */}
+        <HowOurServiceWorks className="mt-14" />
 
         {/* Custom jobs prompt */}
         <div className="mt-14 text-center rounded-2xl border border-border/70 bg-muted/30 p-8 max-w-2xl mx-auto shadow-crisp-xs">

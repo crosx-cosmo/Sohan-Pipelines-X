@@ -11,7 +11,6 @@ import {
   ArrowRight,
   ShieldCheck,
   Search,
-  Database,
   RefreshCw,
   AlertTriangle,
   Loader2,
@@ -21,12 +20,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { businessInfo } from '@/lib/business-info';
 import { DispatchHubMap } from '@/components/dispatch-hub-map';
-import { fetchLiveServiceAreas, type DbServiceArea } from '@/lib/supabase-data';
+import { fetchLiveServiceAreas, getCachedServiceAreas, type DbServiceArea } from '@/lib/supabase-data';
 import { cn } from '@/lib/utils';
 
 export function ServiceAreasSection() {
-  const [areas, setAreas] = React.useState<DbServiceArea[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const [areas, setAreas] = React.useState<DbServiceArea[]>(() => getCachedServiceAreas() ?? []);
+  const [loading, setLoading] = React.useState(() => !getCachedServiceAreas());
   const [error, setError] = React.useState<string | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
 
@@ -216,7 +215,7 @@ export function ServiceAreasSection() {
                         {district}
                       </h2>
                       <p className="text-xs text-muted-foreground">
-                        {districtAreas.length} active service hub{districtAreas.length === 1 ? '' : 's'} registered in Supabase
+                        {districtAreas.length} verified service coverage zone{districtAreas.length === 1 ? '' : 's'}
                       </p>
                     </div>
                   </div>

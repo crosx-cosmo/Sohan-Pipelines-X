@@ -17,12 +17,14 @@ import {
   MapPin,
   Search,
   MessageSquare,
+  Package,
   ChevronRight,
   HelpCircle,
   Clock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { CartTriggerButton } from '@/components/cart-trigger-button';
 import { businessInfo } from '@/lib/business-info';
 import { BrandLogo } from '@/components/brand-logo';
 import { cn } from '@/lib/utils';
@@ -38,6 +40,8 @@ const navLinks = [
   { href: '/service-areas', label: 'Service Areas', icon: MapPin, description: 'Paschim & Purba Medinipur Coverage' },
   { href: '/find-booking', label: 'Track Booking', icon: Search, description: 'Live Status & Job Verification' },
   { href: '/contact', label: 'Contact', icon: MessageSquare, description: '24/7 Emergency Dispatch Line' },
+  { href: '/faq', label: 'Help & FAQ', icon: HelpCircle, description: 'Warranty, Rates & Cleanout Procedures' },
+  { href: '/spare-parts', label: 'Spare Parts', icon: Package, description: 'Genuine Hardware & Wholesale Counter' },
 ];
 
 export function SiteHeader() {
@@ -113,7 +117,7 @@ export function SiteHeader() {
                 <span>24/7 Rapid Emergency Response Active</span>
               </span>
               <span className="text-border" aria-hidden="true">·</span>
-              <span>Dantan, Kharagpur &amp; Midnapore Town</span>
+              <span>Paschim Medinipur &amp; Purba Medinipur</span>
             </div>
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1 font-medium">
@@ -148,14 +152,9 @@ export function SiteHeader() {
               <BrandLogo size="md" />
             </div>
             <div className="flex flex-col leading-tight">
-              <div className="flex items-center gap-1.5">
-                <span className="font-display text-sm sm:text-base font-bold tracking-tight text-foreground whitespace-nowrap group-hover:text-primary transition-colors duration-200">
-                  Sohan Pipeline&apos;s
-                </span>
-                <span className="hidden sm:inline-flex px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-primary/10 text-primary border border-primary/20">
-                  PRO
-                </span>
-              </div>
+              <span className="font-display text-sm sm:text-base font-bold tracking-tight text-foreground whitespace-nowrap group-hover:text-primary transition-colors duration-200">
+                Sohan Pipeline&apos;s
+              </span>
               <span className="text-[10px] sm:text-[11px] font-medium text-muted-foreground whitespace-nowrap">
                 Total Plumbing Solutions
               </span>
@@ -192,6 +191,7 @@ export function SiteHeader() {
 
           {/* Action Zone: Theme Toggle + Book CTA + Mobile Hamburger Trigger */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <CartTriggerButton />
             <ThemeToggle />
 
             {/* Desktop Quick Hotline CTA */}
@@ -284,14 +284,9 @@ export function SiteHeader() {
                 >
                   <BrandLogo size="sm" />
                   <div className="flex flex-col leading-tight">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-display font-bold text-sm text-foreground">
-                        Sohan Pipeline&apos;s
-                      </span>
-                      <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-primary/10 text-primary border border-primary/20">
-                        PRO
-                      </span>
-                    </div>
+                    <span className="font-display font-bold text-sm text-foreground">
+                      Sohan Pipeline&apos;s
+                    </span>
                     <span className="text-[10px] text-muted-foreground">
                       Total Plumbing Solutions
                     </span>
@@ -319,7 +314,7 @@ export function SiteHeader() {
                         Emergency Service Active
                       </span>
                       <span className="text-[10px] text-muted-foreground block">
-                        Dantan &amp; Midnapore Units on Duty
+                        Paschim &amp; Purba Medinipur Units on Duty
                       </span>
                     </div>
                   </div>
@@ -378,33 +373,6 @@ export function SiteHeader() {
                     </Link>
                   );
                 })}
-
-                {/* FAQ Extra Link */}
-                <Link
-                  href="/faq"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    'flex items-center justify-between w-full p-3 rounded-xl transition-colors duration-150 group',
-                    isActive('/faq')
-                      ? 'bg-primary/10 text-primary font-semibold border border-primary/30 shadow-xs'
-                      : 'text-foreground hover:bg-muted/60 border border-transparent'
-                  )}
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/80 text-muted-foreground group-hover:bg-muted group-hover:text-foreground">
-                      <HelpCircle className="h-4.5 w-4.5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <span className="text-sm font-semibold block leading-tight text-foreground group-hover:text-primary transition-colors">
-                        Help &amp; FAQ
-                      </span>
-                      <span className="text-[11px] text-muted-foreground block line-clamp-1 mt-0.5 font-normal">
-                        Warranty, Rates &amp; Cleanout Procedures
-                      </span>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-                </Link>
               </div>
 
               {/* Bottom Drawer Action Zone */}

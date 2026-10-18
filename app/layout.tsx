@@ -1,10 +1,16 @@
 import './globals.css';
+import { Suspense } from 'react';
 import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 import { MobileQuickBar } from '@/components/mobile-quick-bar';
 import { SeoStructuredData } from '@/components/seo-structured-data';
+import { SiteHeader } from '@/components/site-header';
+import { SiteFooter } from '@/components/site-footer';
+import { NavigationProgressBar } from '@/components/navigation-progress-bar';
+import { CartProvider } from '@/lib/cart-context';
+import { CartDrawer } from '@/components/cart-drawer';
 import { SITE_LOGO_URL } from '@/lib/site-logo';
 
 const jakarta = Plus_Jakarta_Sans({
@@ -102,9 +108,16 @@ export const metadata: Metadata = {
     title: "Sohan Pipeline's",
   },
   icons: {
-    icon: '/icon.svg',
-    shortcut: '/icon.svg',
-    apple: '/icon.svg',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon-32.png', type: 'image/png', sizes: '32x32' },
+      { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: [
+      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
   },
   manifest: '/manifest.json',
 };
@@ -117,10 +130,20 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={jakarta.variable}>
       <body className="font-sans antialiased min-h-screen pb-14 md:pb-0 flex flex-col bg-background text-foreground">
+        <Suspense fallback={null}>
+          <NavigationProgressBar />
+        </Suspense>
         <SeoStructuredData />
         <ThemeProvider>
-          {children}
-          <MobileQuickBar />
+          <CartProvider>
+            <SiteHeader />
+            <div className="flex-1 flex flex-col w-full">
+              {children}
+            </div>
+            <SiteFooter />
+            <MobileQuickBar />
+            <CartDrawer />
+          </CartProvider>
         </ThemeProvider>
         <Toaster position="top-right" richColors />
       </body>

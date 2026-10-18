@@ -189,10 +189,10 @@ export function HeroPlumbingGallery() {
         </div>
 
         <Link
-          href="/services#pricing-estimator"
+          href="/services#how-it-works"
           className="inline-flex items-center gap-1 font-semibold text-primary hover:underline text-xs"
         >
-          <span>Calculate Service Costs</span>
+          <span>How Our Service Works</span>
           <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>

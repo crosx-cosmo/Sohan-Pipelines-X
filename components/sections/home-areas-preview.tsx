@@ -12,20 +12,19 @@ import {
   Clock,
   Search,
   CheckCircle2,
-  Database,
   RefreshCw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { businessInfo } from '@/lib/business-info';
 import { DispatchHubMap } from '@/components/dispatch-hub-map';
-import { fetchLiveServiceAreas, type DbServiceArea } from '@/lib/supabase-data';
+import { fetchLiveServiceAreas, getCachedServiceAreas, type DbServiceArea } from '@/lib/supabase-data';
 import { cn } from '@/lib/utils';
 
 export function HomeAreasPreview() {
   const [query, setQuery] = React.useState('');
-  const [areas, setAreas] = React.useState<DbServiceArea[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const [areas, setAreas] = React.useState<DbServiceArea[]>(() => getCachedServiceAreas() ?? []);
+  const [loading, setLoading] = React.useState(() => !getCachedServiceAreas());
   const [error, setError] = React.useState<string | null>(null);
 
   const loadAreas = React.useCallback(async (showLoading = true) => {
@@ -85,7 +84,7 @@ export function HomeAreasPreview() {
 
     if (match) {
       toast.success(`Service Available in ${match.locality} (${match.district})!`, {
-        description: `Verified in live database. PIN: ${match.pincode || 'Active zone'}. Dispatch available today.`,
+        description: `Verified service coverage. PIN: ${match.pincode || 'Active zone'}. Dispatch available today.`,
       });
     } else {
       toast.info(`Special Dispatch for "${query.trim()}"`, {
@@ -115,7 +114,7 @@ export function HomeAreasPreview() {
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.065em] text-primary mb-2.5">
               <span>04. Regional Operations</span>
               <span aria-hidden="true">·</span>
-              <span className="text-muted-foreground font-medium">Live Supabase Database Sync</span>
+              <span className="text-muted-foreground font-medium">Paschim &amp; Purba Medinipur Coverage</span>
             </div>
             <h2 className="font-display text-3xl sm:text-4xl lg:text-4xl font-bold tracking-tight text-foreground text-balance">
               Service Coverage &amp; Dispatch Hubs

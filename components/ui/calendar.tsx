@@ -6,6 +6,7 @@ import { DayPicker } from 'react-day-picker';
 
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
+import { CustomSelect } from '@/components/ui/custom-select';
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
@@ -54,7 +55,7 @@ function Calendar({
         range_middle:
           'aria-selected:bg-accent aria-selected:text-accent-foreground',
         hidden: 'invisible',
-        ...(classNames as any),
+        ...(classNames as Record<string, string>),
       }}
       components={{
         Chevron: ({ orientation }) =>
@@ -63,9 +64,33 @@ function Calendar({
           ) : (
             <ChevronRight className="h-4 w-4" />
           ),
-        ...(props.components as any),
+        Dropdown: ({ value, onChange, options, 'aria-label': ariaLabel }) => {
+          const selectOptions = (options ?? []).map((opt) => ({
+            value: String(opt.value),
+            label: opt.label,
+            disabled: opt.disabled,
+          }));
+          return (
+            <CustomSelect
+              size="sm"
+              value={String(value ?? '')}
+              aria-label={ariaLabel}
+              options={selectOptions}
+              onChange={(val) => {
+                if (onChange) {
+                  const syntheticEvent = {
+                    target: { value: val },
+                  } as React.ChangeEvent<HTMLSelectElement>;
+                  onChange(syntheticEvent);
+                }
+              }}
+              className="min-w-[110px]"
+            />
+          );
+        },
+        ...(props.components as Record<string, unknown>),
       }}
-      {...(props as any)}
+      {...(props as Record<string, unknown>)}
     />
   );
 }

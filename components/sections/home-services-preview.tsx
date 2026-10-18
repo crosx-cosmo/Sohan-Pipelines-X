@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   fetchLiveServices,
+  getCachedServices,
   getServiceIcon,
   getServiceCategory,
   getServiceFeatures,
@@ -39,8 +40,8 @@ const filterCategories: { id: FilterCategory; label: string }[] = [
 ];
 
 export function HomeServicesPreview() {
-  const [servicesList, setServicesList] = React.useState<DbService[]>([]);
-  const [loading, setLoading] = React.useState(true);
+  const [servicesList, setServicesList] = React.useState<DbService[]>(() => getCachedServices() ?? []);
+  const [loading, setLoading] = React.useState(() => !getCachedServices());
   const [error, setError] = React.useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = React.useState<FilterCategory>('all');
 
@@ -97,14 +98,12 @@ export function HomeServicesPreview() {
           <div className="max-w-2xl">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.065em] text-primary mb-2.5">
               <span>01. Core Capabilities</span>
-              <span aria-hidden="true">·</span>
-              <span className="text-muted-foreground font-medium">Live Supabase Database Sync</span>
             </div>
             <h2 className="font-display text-3xl sm:text-4xl lg:text-4xl font-bold tracking-tight text-foreground text-balance">
               Engineered Plumbing Solutions For Every Structure
             </h2>
             <p className="mt-3 text-base text-muted-foreground leading-relaxed text-pretty font-normal tracking-[0.002em]">
-              Durable pipe fitting, sanitary fixtures, and emergency waterline repairs with live estimates sourced directly from our database.
+              Comprehensive pipe fitting, concealed leak detection, and precision sanitary installations backed by transparent pricing approval and master workmanship.
             </p>
           </div>
 

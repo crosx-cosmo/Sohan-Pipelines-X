@@ -1,6 +1,4 @@
 import type { Metadata } from 'next';
-import { SiteHeader } from '@/components/site-header';
-import { SiteFooter } from '@/components/site-footer';
 import { HeroSection } from '@/components/sections/hero-section';
 import { HomeServicesPreview } from '@/components/sections/home-services-preview';
 import { HomeAboutPreview } from '@/components/sections/home-about-preview';
@@ -42,17 +40,13 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <>
-      <SiteHeader />
-      <main>
-        <HeroSection />
-        <HomeServicesPreview />
-        <HomeAboutPreview />
-        <HomeReviewsPreview />
-        <HomeAreasPreview />
-        <CtaSection />
-      </main>
-      <SiteFooter />
-    </>
+    <main className="flex-1">
+      <HeroSection />
+      <HomeServicesPreview />
+      <HomeAboutPreview />
+      <HomeReviewsPreview />
+      <HomeAreasPreview />
+      <CtaSection />
+    </main>
   );
 }

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Phone, Calendar, ArrowRight } from 'lucide-react';
 import { businessInfo } from '@/lib/business-info';
+import { CartTriggerButton } from '@/components/cart-trigger-button';
 
 export function MobileQuickBar() {
   const pathname = usePathname();
@@ -14,7 +15,8 @@ export function MobileQuickBar() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-card/95 dark:bg-card/90 backdrop-blur-xl border-t border-border/80 px-3 py-2.5 shadow-crisp-lg safe-bottom render-crisp">
-      <div className="flex items-center gap-2.5 max-w-md mx-auto">
+      <div className="flex items-center gap-2 max-w-md mx-auto">
+        <CartTriggerButton className="h-11 w-11 shrink-0 rounded-xl" />
         <a
           href={`tel:${businessInfo.phone}`}
           className="flex-1 flex items-center justify-center gap-2 h-11 px-3 rounded-xl bg-card border border-border/80 text-foreground font-semibold text-xs shadow-crisp-xs active:scale-[0.98] transition-[color,background-color,border-color,box-shadow,transform] duration-150 hover:bg-muted/60"

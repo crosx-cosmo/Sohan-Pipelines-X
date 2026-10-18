@@ -105,53 +105,178 @@ export function getServiceFeatures(slugOrName: string): string[] {
   return ['Master plumber workmanship', 'Upfront pricing approval', 'Standard hardware compatibility', '100% satisfaction guarantee'];
 }
 
+// In-memory cache store for live Supabase queries to eliminate redundant network roundtrips during SPA navigation
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes TTL for stable master data
+
+let servicesCache: CacheEntry<DbService[]> | null = null;
+let inflightServicesPromise: Promise<{ data: DbService[]; error: string | null }> | null = null;
+
+let areasCache: CacheEntry<DbServiceArea[]> | null = null;
+let inflightAreasPromise: Promise<{ data: DbServiceArea[]; error: string | null }> | null = null;
+
+let reviewsCache: CacheEntry<DbReview[]> | null = null;
+let inflightReviewsPromise: Promise<{ data: DbReview[]; error: string | null }> | null = null;
+
+let sparePartsCache: CacheEntry<DbSparePart[]> | null = null;
+let inflightSparePartsPromise: Promise<{ data: DbSparePart[]; error: string | null }> | null = null;
+
 /**
- * Fetch active services directly from the live Supabase "services" table.
+ * Get synchronously cached services if available and fresh (enables zero-latency initial state)
  */
-export async function fetchLiveServices(): Promise<{ data: DbService[]; error: string | null }> {
-  try {
-    const { data, error } = await supabase
-      .from('services')
-      .select('id, name, slug, description, price, duration, active, created_at')
-      .eq('active', true)
-      .order('price', { ascending: true });
-
-    if (error) {
-      return { data: [], error: error.message };
-    }
-
-    return { data: data ?? [], error: null };
-  } catch (err) {
-    return {
-      data: [],
-      error: err instanceof Error ? err.message : 'Failed to connect to Supabase services table',
-    };
+export function getCachedServices(): DbService[] | null {
+  if (servicesCache && Date.now() - servicesCache.timestamp < CACHE_TTL_MS) {
+    return servicesCache.data;
   }
+  return null;
 }
 
 /**
- * Fetch active service areas directly from the live Supabase "service_areas" table.
+ * Get synchronously cached service areas if available and fresh
  */
-export async function fetchLiveServiceAreas(): Promise<{ data: DbServiceArea[]; error: string | null }> {
-  try {
-    const { data, error } = await supabase
-      .from('service_areas')
-      .select('id, district, subdivision, block, locality, pincode, active, created_at')
-      .eq('active', true)
-      .order('district', { ascending: true })
-      .order('locality', { ascending: true });
-
-    if (error) {
-      return { data: [], error: error.message };
-    }
-
-    return { data: data ?? [], error: null };
-  } catch (err) {
-    return {
-      data: [],
-      error: err instanceof Error ? err.message : 'Failed to connect to Supabase service_areas table',
-    };
+export function getCachedServiceAreas(): DbServiceArea[] | null {
+  if (areasCache && Date.now() - areasCache.timestamp < CACHE_TTL_MS) {
+    return areasCache.data;
   }
+  return null;
+}
+
+/**
+ * Get synchronously cached reviews if available and fresh
+ */
+export function getCachedReviews(): DbReview[] | null {
+  if (reviewsCache && Date.now() - reviewsCache.timestamp < CACHE_TTL_MS) {
+    return reviewsCache.data;
+  }
+  return null;
+}
+
+/**
+ * Get synchronously cached spare parts if available and fresh
+ */
+export function getCachedSpareParts(): DbSparePart[] | null {
+  if (sparePartsCache && Date.now() - sparePartsCache.timestamp < CACHE_TTL_MS) {
+    return sparePartsCache.data;
+  }
+  return null;
+}
+
+export function invalidateServicesCache(): void {
+  servicesCache = null;
+}
+
+export function invalidateAreasCache(): void {
+  areasCache = null;
+}
+
+export function invalidateReviewsCache(): void {
+  reviewsCache = null;
+}
+
+export function invalidateSparePartsCache(): void {
+  sparePartsCache = null;
+}
+
+export function clearAllDataCache(): void {
+  servicesCache = null;
+  areasCache = null;
+  reviewsCache = null;
+  sparePartsCache = null;
+}
+
+/**
+ * Fetch active services directly from the live Supabase "services" table with intelligent caching.
+ */
+export async function fetchLiveServices(options: { forceRefresh?: boolean } = {}): Promise<{ data: DbService[]; error: string | null }> {
+  const { forceRefresh = false } = options;
+
+  if (!forceRefresh && servicesCache && Date.now() - servicesCache.timestamp < CACHE_TTL_MS) {
+    return { data: servicesCache.data, error: null };
+  }
+
+  if (inflightServicesPromise) {
+    return inflightServicesPromise;
+  }
+
+  inflightServicesPromise = (async () => {
+    try {
+      const { data, error } = await supabase
+        .from('services')
+        .select('id, name, slug, description, price, duration, active, created_at')
+        .eq('active', true)
+        .order('price', { ascending: true });
+
+      if (error) {
+        return { data: servicesCache?.data ?? [], error: error.message };
+      }
+
+      const freshData = data ?? [];
+      servicesCache = {
+        data: freshData,
+        timestamp: Date.now(),
+      };
+      return { data: freshData, error: null };
+    } catch (err) {
+      return {
+        data: servicesCache?.data ?? [],
+        error: err instanceof Error ? err.message : 'Failed to connect to Supabase services table',
+      };
+    } finally {
+      inflightServicesPromise = null;
+    }
+  })();
+
+  return inflightServicesPromise;
+}
+
+/**
+ * Fetch active service areas directly from the live Supabase "service_areas" table with intelligent caching.
+ */
+export async function fetchLiveServiceAreas(options: { forceRefresh?: boolean } = {}): Promise<{ data: DbServiceArea[]; error: string | null }> {
+  const { forceRefresh = false } = options;
+
+  if (!forceRefresh && areasCache && Date.now() - areasCache.timestamp < CACHE_TTL_MS) {
+    return { data: areasCache.data, error: null };
+  }
+
+  if (inflightAreasPromise) {
+    return inflightAreasPromise;
+  }
+
+  inflightAreasPromise = (async () => {
+    try {
+      const { data, error } = await supabase
+        .from('service_areas')
+        .select('id, district, subdivision, block, locality, pincode, active, created_at')
+        .eq('active', true)
+        .order('district', { ascending: true })
+        .order('locality', { ascending: true });
+
+      if (error) {
+        return { data: areasCache?.data ?? [], error: error.message };
+      }
+
+      const freshData = data ?? [];
+      areasCache = {
+        data: freshData,
+        timestamp: Date.now(),
+      };
+      return { data: freshData, error: null };
+    } catch (err) {
+      return {
+        data: areasCache?.data ?? [],
+        error: err instanceof Error ? err.message : 'Failed to connect to Supabase service_areas table',
+      };
+    } finally {
+      inflightAreasPromise = null;
+    }
+  })();
+
+  return inflightAreasPromise;
 }
 
 /**
@@ -178,26 +303,120 @@ export interface DbReview {
 }
 
 /**
- * Fetch genuine reviews directly from the live Supabase data source.
+ * Fetch genuine reviews directly from the live Supabase data source with intelligent caching.
  * If no review table or genuine records exist in the database, returns an empty array cleanly.
  */
-export async function fetchLiveReviews(): Promise<{ data: DbReview[]; error: string | null }> {
-  try {
-    const { data, error } = await supabase
-      .from('reviews')
-      .select('id, name, rating, comment, text, service, location, verified, created_at')
-      .order('created_at', { ascending: false });
+export async function fetchLiveReviews(options: { forceRefresh?: boolean } = {}): Promise<{ data: DbReview[]; error: string | null }> {
+  const { forceRefresh = false } = options;
 
-    if (error) {
-      return { data: [], error: error.message };
-    }
-
-    return { data: (data as DbReview[]) ?? [], error: null };
-  } catch (err) {
-    return {
-      data: [],
-      error: err instanceof Error ? err.message : 'Failed to connect to Supabase reviews table',
-    };
+  if (!forceRefresh && reviewsCache && Date.now() - reviewsCache.timestamp < CACHE_TTL_MS) {
+    return { data: reviewsCache.data, error: null };
   }
+
+  if (inflightReviewsPromise) {
+    return inflightReviewsPromise;
+  }
+
+  inflightReviewsPromise = (async () => {
+    try {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('id, name, rating, comment, text, service, location, verified, created_at')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        return { data: reviewsCache?.data ?? [], error: error.message };
+      }
+
+      const freshData = (data as DbReview[]) ?? [];
+      reviewsCache = {
+        data: freshData,
+        timestamp: Date.now(),
+      };
+      return { data: freshData, error: null };
+    } catch (err) {
+      return {
+        data: reviewsCache?.data ?? [],
+        error: err instanceof Error ? err.message : 'Failed to connect to Supabase reviews table',
+      };
+    } finally {
+      inflightReviewsPromise = null;
+    }
+  })();
+
+  return inflightReviewsPromise;
 }
+
+/**
+ * Schema representing spare parts and inventory records in Supabase:
+ * - id: uuid or string
+ * - name: text (item name)
+ * - category: text (e.g. Pipes & Fittings, Valves, Sanitary, Pumps)
+ * - sku: text (stock keeping unit code)
+ * - stock: number (current inventory count)
+ * - selling_price: number (verified retail/selling price)
+ * - purchase_price: number (procurement cost)
+ * - reorder_level: number (minimum threshold)
+ * - created_at: timestamptz
+ */
+export interface DbSparePart {
+  id: string;
+  name: string;
+  category?: string | null;
+  sku?: string | null;
+  stock?: number | null;
+  selling_price?: number | null;
+  purchase_price?: number | null;
+  reorder_level?: number | null;
+  created_at?: string;
+  brand?: string | null;
+  description?: string | null;
+  image_url?: string | null;
+  unit?: string | null;
+}
+
+/**
+ * Fetch genuine spare parts directly from the live Supabase "spare_parts" table with intelligent caching.
+ */
+export async function fetchLiveSpareParts(options: { forceRefresh?: boolean } = {}): Promise<{ data: DbSparePart[]; error: string | null }> {
+  const { forceRefresh = false } = options;
+
+  if (!forceRefresh && sparePartsCache && Date.now() - sparePartsCache.timestamp < CACHE_TTL_MS) {
+    return { data: sparePartsCache.data, error: null };
+  }
+
+  if (inflightSparePartsPromise) {
+    return inflightSparePartsPromise;
+  }
+
+  inflightSparePartsPromise = (async () => {
+    try {
+      const { data, error } = await supabase
+        .from('spare_parts')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (error) {
+        return { data: sparePartsCache?.data ?? [], error: error.message };
+      }
+
+      const freshData = (data as DbSparePart[]) ?? [];
+      sparePartsCache = {
+        data: freshData,
+        timestamp: Date.now(),
+      };
+      return { data: freshData, error: null };
+    } catch (err) {
+      return {
+        data: sparePartsCache?.data ?? [],
+        error: err instanceof Error ? err.message : 'Failed to connect to Supabase spare_parts table',
+      };
+    } finally {
+      inflightSparePartsPromise = null;
+    }
+  })();
+
+  return inflightSparePartsPromise;
+}
+
 

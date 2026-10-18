@@ -378,6 +378,16 @@ svg {
   animation: accordion-up 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Global Theme-Based Dropdown & Select Fallback Protection */
+select,
+option,
+optgroup {
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  border-color: hsl(var(--border));
+  font-family: var(--font-sans);
+}
+
 /* Enterprise Print Voucher & Work-Order Styles */
 @media print {
   header,

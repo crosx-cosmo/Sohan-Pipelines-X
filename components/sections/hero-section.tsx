@@ -4,7 +4,6 @@ import * as React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
-import { toast } from 'sonner';
 import {
   ArrowRight,
   Phone,
@@ -18,8 +17,7 @@ import {
   Gauge,
   Sparkles,
   MapPin,
-  Copy,
-  Check,
+  MessageCircle,
   Activity,
   Layers,
 } from 'lucide-react';
@@ -32,20 +30,6 @@ import {
 } from '@/lib/motion';
 
 export function HeroSection() {
-  const [copied, setCopied] = React.useState(false);
-
-  const handleCopyHotline = async () => {
-    try {
-      await navigator.clipboard.writeText(businessInfo.phone);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-      toast.success('Emergency Hotline Copied', {
-        description: `${businessInfo.phoneDisplay} copied to your clipboard.`,
-      });
-    } catch {
-      toast.info(`Emergency Hotline: ${businessInfo.phoneDisplay}`);
-    }
-  };
 
   return (
     <section className="relative overflow-hidden pt-24 pb-16 lg:pt-32 lg:pb-24 border-b border-border/60">
@@ -90,9 +74,7 @@ export function HeroSection() {
 
             {/* Narrative Prose */}
             <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl text-pretty font-normal tracking-[0.002em]">
-              Serving residential homes, apartments, and commercial facilities across Dantan,
-              Kharagpur, and Midnapore. Specialized in concealed leak diagnosis, CPVC/UPVC
-              pipeline networks, sanitary bathroom fittings, and pressurized water storage.
+              SOHAN PIPELINES delivers complete plumbing solutions across West Bengal, combining authorized plumbing parts sales with professional plumbing engineering. From residential bathroom installations to commercial pipeline projects, we guarantee genuine materials, upfront pricing, and lasting craftsmanship.
             </p>
 
             {/* High-Intent Conversion Controls */}
@@ -121,23 +103,21 @@ export function HeroSection() {
               </Button>
 
               <Button
-                type="button"
-                variant="ghost"
+                asChild
                 size="lg"
-                onClick={handleCopyHotline}
-                className="text-xs font-semibold h-12 text-muted-foreground hover:text-foreground whitespace-nowrap px-3.5 rounded-xl"
+                variant="outline"
+                className="font-semibold text-sm h-12 px-5 rounded-xl border-emerald-500/40 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/15 hover:border-emerald-500/60 whitespace-nowrap w-full sm:w-auto shadow-xs transition-colors"
               >
-                {copied ? (
-                  <>
-                    <Check className="mr-1.5 h-3.5 w-3.5 text-emerald-500" />
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="mr-1.5 h-3.5 w-3.5" />
-                    Copy Number
-                  </>
-                )}
+                <a
+                  href={`https://wa.me/918670143003?text=${encodeURIComponent(
+                    "Hi, I’d like to connect with the founder of SOHAN PIPELINES regarding a personal query. Could you please assist me? Thank you."
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MessageCircle className="mr-2 h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                  Contact on WhatsApp
+                </a>
               </Button>
             </div>
 

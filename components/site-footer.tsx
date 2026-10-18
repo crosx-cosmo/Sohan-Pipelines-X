@@ -41,6 +41,7 @@ const footerSections = [
       { label: 'Contact Us', href: '/contact' },
       { label: 'Book a Service Online', href: '/book' },
       { label: 'Find Existing Booking', href: '/find-booking' },
+      { label: 'Plumbing Spare Parts', href: '/spare-parts' },
     ],
   },
 ];

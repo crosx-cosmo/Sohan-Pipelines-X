@@ -12,13 +12,13 @@ export default function Template({ children }: { children: React.ReactNode }) {
   return (
     <motion.div
       key={pathname}
-      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 6 }}
-      animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+      initial={shouldReduceMotion ? false : { opacity: 0.92 }}
+      animate={{ opacity: 1 }}
       transition={{
-        duration: 0.28,
+        duration: 0.18,
         ease: gentleEasing,
       }}
-      style={{ willChange: 'opacity, transform' }}
+      style={{ willChange: 'opacity' }}
       className="flex-1 flex flex-col w-full gpu-accelerated"
     >
       {children}
