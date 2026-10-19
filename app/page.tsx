@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { HeroSection } from '@/components/sections/hero-section';
 import { HomeServicesPreview } from '@/components/sections/home-services-preview';
+import { HomeSparePartsPreview } from '@/components/sections/home-spare-parts-preview';
 import { HomeAboutPreview } from '@/components/sections/home-about-preview';
 import { HomeReviewsPreview } from '@/components/sections/home-reviews-preview';
 import { HomeAreasPreview } from '@/components/sections/home-areas-preview';
@@ -43,6 +44,7 @@ export default function Home() {
     <main className="flex-1">
       <HeroSection />
       <HomeServicesPreview />
+      <HomeSparePartsPreview />
       <HomeAboutPreview />
       <HomeReviewsPreview />
       <HomeAreasPreview />

@@ -5,29 +5,24 @@ const supabaseUrl =
   'https://jlfqodfdqkbunqfgffut.supabase.co';
 const supabaseKey =
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.placeholder';
+  'sb_publishable_YFmgzG2dgPYxm-zCpQRUig_MSYh6T5O';
 
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) {
-  // This only warns at build/runtime start — it does not throw, so builds
-  // without the env vars configured still succeed. Any real call to
-  // `supabase` will fail until NEXT_PUBLIC_SUPABASE_URL and
-  // NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY are set (see SUPABASE_SETUP.md).
   console.warn(
-    '[supabase] NEXT_PUBLIC_SUPABASE_URL and/or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY are not set. ' +
-      'Booking and lookup features will not work until these are configured.'
+    '[supabase] NEXT_PUBLIC_SUPABASE_URL and/or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY are not set in env; using project defaults.'
   );
 }
 
 /**
- * Single shared Supabase client for the whole app. This project uses ONLY
- * this Supabase project as its database — see SUPABASE_SETUP.md for the
- * assumed schema and required environment variables. Only the publishable
- * (anon) key is ever used here; it is safe to expose on the client because
- * all access is expected to be governed by the project's existing RLS
- * policies.
+ * Single shared Supabase client for the whole app.
+ * Persist session is enabled in the browser so that if the administrator signs in
+ * to sync RLS-protected tables (such as `spare_parts`), the authenticated JWT
+ * is automatically sent with subsequent queries.
  */
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
-    persistSession: false,
+    persistSession: typeof window !== 'undefined',
+    autoRefreshToken: typeof window !== 'undefined',
+    detectSessionInUrl: false,
   },
 });

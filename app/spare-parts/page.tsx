@@ -5,6 +5,9 @@ import { SparePartsSection } from '@/components/sections/spare-parts-section';
 import { fetchLiveSpareParts } from '@/lib/supabase-data';
 import { SITE_LOGO_URL } from '@/lib/site-logo';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Plumbing Spare Parts & Genuine Hardware — Sohan Pipeline's",
   description:
@@ -47,7 +50,7 @@ export const metadata: Metadata = {
 };
 
 export default async function SparePartsPage() {
-  const { data: liveParts } = await fetchLiveSpareParts();
+  const { data: liveParts } = await fetchLiveSpareParts({ forceRefresh: true });
 
   const partsListSchema = {
     '@context': 'https://schema.org',

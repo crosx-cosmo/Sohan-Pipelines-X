@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
+import { toast } from 'sonner';
 import {
   Package,
   Search,
@@ -19,6 +20,10 @@ import {
   Truck,
   Check,
   X,
+  Copy,
+  KeyRound,
+  LogOut,
+  Database,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,9 +31,11 @@ import { Input } from '@/components/ui/input';
 import { CustomSelect, type SelectOption } from '@/components/ui/custom-select';
 import { businessInfo } from '@/lib/business-info';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
 import {
   fetchLiveSpareParts,
   getCachedSpareParts,
+  WAREHOUSE_CATALOG_SPARE_PARTS,
   type DbSparePart,
 } from '@/lib/supabase-data';
 import {
@@ -40,11 +47,23 @@ import { luxuryEasing } from '@/lib/motion';
 
 type SortOption = 'default' | 'price-asc' | 'price-desc' | 'stock-desc' | 'name-asc';
 
+const PUBLIC_RLS_SQL_SNIPPET = `ALTER TABLE public.spare_parts ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow public read-only access on spare_parts" ON public.spare_parts;
+
+CREATE POLICY "Allow public read-only access on spare_parts"
+  ON public.spare_parts
+  FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+GRANT SELECT ON public.spare_parts TO anon, authenticated;`;
+
 const sortOptions: SelectOption[] = [
   {
     value: 'default',
     label: 'Default Order',
-    description: 'Standard warehouse catalog sequence',
+    description: 'Latest warehouse additions first',
   },
   {
     value: 'price-asc',
@@ -128,17 +147,44 @@ interface SparePartsSectionProps {
 }
 
 export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
+  const hasInitialParts = Array.isArray(initialParts) && initialParts.length > 0;
+
   const [parts, setParts] = React.useState<DbSparePart[]>(
-    () => getCachedSpareParts() ?? initialParts ?? []
+    () =>
+      getCachedSpareParts() ??
+      (hasInitialParts ? initialParts : WAREHOUSE_CATALOG_SPARE_PARTS)
   );
-  const [loading, setLoading] = React.useState(
-    () => !getCachedSpareParts() && !initialParts
-  );
+  const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [rlsBlocked, setRlsBlocked] = React.useState<boolean>(false);
+  const [showAdminSyncPanel, setShowAdminSyncPanel] = React.useState<boolean>(false);
+
+  // Admin session sync state (for viewing RLS-protected rows added in Admin Panel)
+  const [adminEmail, setAdminEmail] = React.useState('');
+  const [adminPassword, setAdminPassword] = React.useState('');
+  const [signingIn, setSigningIn] = React.useState(false);
+  const [activeUserEmail, setActiveUserEmail] = React.useState<string | null>(null);
+  const [copiedSql, setCopiedSql] = React.useState(false);
 
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedCategory, setSelectedCategory] = React.useState('all');
   const [sortBy, setSortBy] = React.useState<SortOption>('default');
+
+  // Support deep linking via ?category=pipes|valves|taps|sanitary|heaters|tanks and ?q=...
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const catParam = params.get('category')?.toLowerCase();
+    const qParam = params.get('q');
+    queueMicrotask(() => {
+      if (catParam && categoryFilters.some((c) => c.id === catParam)) {
+        setSelectedCategory(catParam);
+      }
+      if (qParam) {
+        setSearchQuery(qParam);
+      }
+    });
+  }, []);
 
   // Quantities for cards before adding to cart (product.id -> quantity)
   const [cardQuantities, setCardQuantities] = React.useState<Record<string, number>>({});
@@ -162,158 +208,244 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
   const loadParts = React.useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
     setError(null);
-    const { data, error: err } = await fetchLiveSpareParts({ forceRefresh: true });
+    const { data, error: err, rlsBlocked: isRlsBlocked } = await fetchLiveSpareParts({
+      forceRefresh: true,
+    });
     if (err) {
       setError(err);
-      setParts([]);
+      setParts(WAREHOUSE_CATALOG_SPARE_PARTS);
+      setRlsBlocked(false);
     } else {
-      setParts(data);
+      setParts(data.length > 0 ? data : WAREHOUSE_CATALOG_SPARE_PARTS);
+      setRlsBlocked(Boolean(isRlsBlocked));
     }
     setLoading(false);
   }, []);
 
+  // Check active Supabase session & subscribe to live `public.spare_parts` changes
   React.useEffect(() => {
     let active = true;
-    fetchLiveSpareParts().then(({ data, error: err }) => {
+
+    supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
-      if (err) {
-        setError(err);
-        setParts([]);
-      } else {
-        setParts(data);
-      }
-      setLoading(false);
+      setActiveUserEmail(data.session?.user?.email ?? null);
     });
+
+    fetchLiveSpareParts({ forceRefresh: true }).then(
+      ({ data, error: err, rlsBlocked: isRlsBlocked }) => {
+        if (!active) return;
+        if (err) {
+          setError(err);
+          setParts(WAREHOUSE_CATALOG_SPARE_PARTS);
+        } else {
+          setParts(data.length > 0 ? data : WAREHOUSE_CATALOG_SPARE_PARTS);
+          setRlsBlocked(Boolean(isRlsBlocked));
+        }
+        setLoading(false);
+      }
+    );
+
+    const channel = supabase
+      .channel('public-spare-parts-live')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'spare_parts' },
+        () => {
+          if (active) {
+            loadParts(false);
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       active = false;
+      supabase.removeChannel(channel);
     };
-  }, []);
+  }, [loadParts]);
 
-  // Update card quantity
-  const handleQuantityChange = (id: string, delta: number, maxStock: number | null | undefined) => {
+  const handleAdminSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminEmail.trim() || !adminPassword) return;
+    setSigningIn(true);
+    try {
+      const { data, error: signInErr } = await supabase.auth.signInWithPassword({
+        email: adminEmail.trim(),
+        password: adminPassword,
+      });
+      if (signInErr) {
+        toast.error(signInErr.message || 'Unable to sign in with Admin credentials');
+      } else {
+        setActiveUserEmail(data.user?.email ?? null);
+        setAdminPassword('');
+        toast.success('Admin session connected! Fetching live spare parts...');
+        await loadParts(true);
+      }
+    } finally {
+      setSigningIn(false);
+    }
+  };
+
+  const handleAdminSignOut = async () => {
+    await supabase.auth.signOut();
+    setActiveUserEmail(null);
+    toast.info('Admin session disconnected');
+    await loadParts(true);
+  };
+
+  const handleCopySql = async () => {
+    try {
+      await navigator.clipboard.writeText(PUBLIC_RLS_SQL_SNIPPET);
+      setCopiedSql(true);
+      toast.success('Public RLS SQL policy copied to clipboard!');
+      setTimeout(() => setCopiedSql(false), 2500);
+    } catch {
+      toast.error('Unable to copy automatically — please select and copy the SQL snippet.');
+    }
+  };
+
+  const getCardQuantity = (id: string) => cardQuantities[id] ?? 1;
+
+  const handleQuantityChange = (
+    id: string,
+    delta: number,
+    maxStock?: number | null
+  ) => {
     setCardQuantities((prev) => {
-      const current = prev[id] || 1;
-      const next = current + delta;
-      if (next < 1) return prev;
-      if (maxStock !== null && maxStock !== undefined && next > maxStock) return prev;
+      const current = prev[id] ?? 1;
+      const maxAllowed =
+        maxStock !== null && maxStock !== undefined && maxStock > 0
+          ? maxStock
+          : 99;
+      const next = Math.max(1, Math.min(maxAllowed, current + delta));
       return { ...prev, [id]: next };
     });
   };
 
-  // Add to cart from card
   const handleAddToCart = (part: DbSparePart) => {
-    const qty = cardQuantities[part.id] || 1;
-    const imageUrl = resolveProductImage(part);
+    const qty = getCardQuantity(part.id);
+    const resolvedImage = resolveProductImage(part);
     addItem(
       {
         id: part.id,
         name: part.name,
         sku: part.sku,
         category: part.category,
-        selling_price: part.selling_price ?? null,
-        stock: part.stock ?? null,
-        image_url: imageUrl,
+        selling_price:
+          part.selling_price !== undefined && part.selling_price !== null
+            ? Number(part.selling_price)
+            : null,
+        stock:
+          part.stock !== undefined && part.stock !== null
+            ? Number(part.stock)
+            : null,
+        image_url: resolvedImage,
       },
       qty
     );
-    // Reset card quantity counter back to 1
     setCardQuantities((prev) => ({ ...prev, [part.id]: 1 }));
   };
 
-  // Build direct WhatsApp URL for single item
   const getDirectWhatsAppUrl = (part: DbSparePart) => {
-    const priceText = part.selling_price ? `₹${part.selling_price}` : 'Price on warehouse enquiry';
-    const skuText = part.sku ? ` (SKU: ${part.sku})` : '';
-    const qty = cardQuantities[part.id] || 1;
-    const message = `Hello Sohan Pipeline's, I am inquiring about availability and purchase for the spare part "${part.name}"${skuText} — Quantity: ${qty}. Listed Price: ${priceText}. Please confirm current stock, final pricing, and delivery/pickup availability.`;
+    const qty = getCardQuantity(part.id);
+    const priceText =
+      part.selling_price && part.selling_price > 0
+        ? ` (Listed Price: ₹${Number(part.selling_price).toLocaleString('en-IN')})`
+        : '';
+    const skuText = part.sku ? ` [SKU: ${part.sku}]` : '';
+    const message = `Hello Sohan Pipeline's, I would like to enquire about:\n\n• *${part.name}*${skuText}\n  Quantity: ${qty}${priceText}\n\nPlease confirm current stock availability, final pricing, and delivery/pickup details.`;
     return `https://wa.me/${rawPhone}?text=${encodeURIComponent(message)}`;
   };
 
-  // Filtered and sorted products
   const filteredAndSortedParts = React.useMemo(() => {
     let result = parts.filter((part) => {
-      const q = searchQuery.toLowerCase().trim();
+      const q = searchQuery.trim().toLowerCase();
       const matchesSearch =
         !q ||
         part.name.toLowerCase().includes(q) ||
-        (part.sku && part.sku.toLowerCase().includes(q)) ||
         (part.category && part.category.toLowerCase().includes(q)) ||
-        (part.description && part.description.toLowerCase().includes(q)) ||
-        (part.brand && part.brand.toLowerCase().includes(q));
+        (part.sku && part.sku.toLowerCase().includes(q)) ||
+        (part.description && part.description.toLowerCase().includes(q));
 
       if (!matchesSearch) return false;
-
       if (selectedCategory === 'all') return true;
-      const combined = `${part.name} ${part.category || ''} ${part.description || ''}`.toLowerCase();
 
+      const catLower = `${part.category || ''} ${part.name || ''}`.toLowerCase();
       if (selectedCategory === 'pipes') {
         return (
-          combined.includes('pipe') ||
-          combined.includes('fitting') ||
-          combined.includes('cpvc') ||
-          combined.includes('upvc') ||
-          combined.includes('swr') ||
-          combined.includes('elbow') ||
-          combined.includes('bend') ||
-          combined.includes('tee') ||
-          combined.includes('coupling') ||
-          combined.includes('solvent')
+          catLower.includes('pipe') ||
+          catLower.includes('fitting') ||
+          catLower.includes('cpvc') ||
+          catLower.includes('upvc') ||
+          catLower.includes('pvc') ||
+          catLower.includes('elbow') ||
+          catLower.includes('tee') ||
+          catLower.includes('coupl') ||
+          catLower.includes('solvent') ||
+          catLower.includes('bend')
         );
       }
       if (selectedCategory === 'valves') {
         return (
-          combined.includes('valve') ||
-          combined.includes('cock') ||
-          combined.includes('regulator') ||
-          combined.includes('stop') ||
-          combined.includes('check')
+          catLower.includes('valve') ||
+          catLower.includes('cock') ||
+          catLower.includes('nrv') ||
+          catLower.includes('regulator') ||
+          catLower.includes('check')
         );
       }
       if (selectedCategory === 'taps') {
         return (
-          combined.includes('tap') ||
-          combined.includes('diverter') ||
-          combined.includes('faucet') ||
-          combined.includes('bib') ||
-          combined.includes('shower')
+          catLower.includes('tap') ||
+          catLower.includes('faucet') ||
+          catLower.includes('mixer') ||
+          catLower.includes('diverter') ||
+          catLower.includes('shower') ||
+          catLower.includes('bib') ||
+          catLower.includes('pillar')
         );
       }
       if (selectedCategory === 'sanitary') {
         return (
-          combined.includes('sanitary') ||
-          combined.includes('commode') ||
-          combined.includes('flush') ||
-          combined.includes('cistern') ||
-          combined.includes('basin') ||
-          combined.includes('trap')
+          catLower.includes('sanitary') ||
+          catLower.includes('flush') ||
+          catLower.includes('cistern') ||
+          catLower.includes('commode') ||
+          catLower.includes('basin') ||
+          catLower.includes('trap') ||
+          catLower.includes('waste')
         );
       }
       if (selectedCategory === 'heaters') {
         return (
-          combined.includes('geyser') ||
-          combined.includes('heater') ||
-          combined.includes('hot water') ||
-          combined.includes('thermal')
+          catLower.includes('geyser') ||
+          catLower.includes('heater') ||
+          catLower.includes('thermal') ||
+          catLower.includes('hot') ||
+          catLower.includes('braided')
         );
       }
       if (selectedCategory === 'tanks') {
         return (
-          combined.includes('tank') ||
-          combined.includes('float') ||
-          combined.includes('motor') ||
-          combined.includes('pump') ||
-          combined.includes('foot valve')
+          catLower.includes('tank') ||
+          catLower.includes('float') ||
+          catLower.includes('pump') ||
+          catLower.includes('motor') ||
+          catLower.includes('foot') ||
+          catLower.includes('nipple')
         );
       }
-
       return true;
     });
 
-    // Apply sorting
     if (sortBy === 'price-asc') {
-      result = [...result].sort((a, b) => (a.selling_price || 0) - (b.selling_price || 0));
+      result = [...result].sort(
+        (a, b) => (a.selling_price || 0) - (b.selling_price || 0)
+      );
     } else if (sortBy === 'price-desc') {
-      result = [...result].sort((a, b) => (b.selling_price || 0) - (a.selling_price || 0));
+      result = [...result].sort(
+        (a, b) => (b.selling_price || 0) - (a.selling_price || 0)
+      );
     } else if (sortBy === 'stock-desc') {
       result = [...result].sort((a, b) => (b.stock || 0) - (a.stock || 0));
     } else if (sortBy === 'name-asc') {
@@ -330,26 +462,179 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 p-4 rounded-2xl bg-muted/30 border border-border/70 text-xs text-muted-foreground">
           <div className="flex items-center gap-2.5">
             <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span className="font-semibold text-foreground truncate">100% Genuine Fittings</span>
+            <span className="font-semibold text-foreground truncate">
+              100% Genuine Fittings
+            </span>
           </div>
           <div className="flex items-center gap-2.5">
             <Truck className="h-4 w-4 text-primary shrink-0" />
-            <span className="font-semibold text-foreground truncate">Warehouse Dispatch</span>
+            <span className="font-semibold text-foreground truncate">
+              Warehouse Dispatch
+            </span>
           </div>
           <div className="flex items-center gap-2.5">
             <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span className="font-semibold text-foreground truncate">Verified Database Rates</span>
+            <span className="font-semibold text-foreground truncate">
+              Verified Database Rates
+            </span>
           </div>
           <div className="flex items-center gap-2.5">
             <MessageCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-            <span className="font-semibold text-foreground truncate">Direct WhatsApp Checkout</span>
+            <span className="font-semibold text-foreground truncate">
+              Direct WhatsApp Checkout
+            </span>
           </div>
         </div>
+
+        {/* Active Admin Session Banner (when authenticated) */}
+        {activeUserEmail && (
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs">
+            <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 font-medium">
+              <Database className="h-4 w-4 shrink-0" />
+              <span>
+                Connected to Supabase Admin Session ({activeUserEmail}) · Showing{' '}
+                <strong className="font-mono">{parts.length}</strong> live spare
+                parts
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => loadParts(true)}
+                className="h-7 px-2.5 text-[11px]"
+              >
+                <RefreshCw className="mr-1 h-3 w-3" />
+                Sync Now
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleAdminSignOut}
+                className="h-7 px-2.5 text-[11px] text-muted-foreground hover:text-foreground"
+              >
+                <LogOut className="mr-1 h-3 w-3" />
+                Sign Out
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Admin Panel Custom Rows Sync Notice (when anon is restricted by Supabase RLS) */}
+        {!activeUserEmail && rlsBlocked && (
+          <div className="rounded-2xl border border-primary/25 bg-card/90 p-3.5 sm:px-5 space-y-4 shadow-crisp-xs">
+            <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5 text-muted-foreground">
+                <Database className="h-4 w-4 text-primary shrink-0" />
+                <span>
+                  Showing <strong className="text-foreground font-mono">{parts.length}</strong> verified warehouse spare parts. Added custom items in your Admin Panel?
+                </span>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAdminSyncPanel((prev) => !prev)}
+                className="h-8 px-3 text-xs font-semibold rounded-xl border-primary/30 text-primary hover:bg-primary/10"
+              >
+                <KeyRound className="mr-1.5 h-3.5 w-3.5" />
+                {showAdminSyncPanel ? 'Hide Admin Sync' : 'Sync Admin Panel / RLS'}
+              </Button>
+            </div>
+
+            {showAdminSyncPanel && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-2 border-t border-border/70">
+                <form
+                  onSubmit={handleAdminSignIn}
+                  className="rounded-xl border border-border/80 bg-muted/25 p-4 space-y-3"
+                >
+                  <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                    <KeyRound className="h-3.5 w-3.5 text-primary" />
+                    <span>Option 1: Sign In with Admin Panel Credentials</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Authenticate this browser with your Supabase Admin Panel email &amp; password to load RLS-protected <code className="font-mono">spare_parts</code> rows immediately.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <Input
+                      type="email"
+                      placeholder="Admin email"
+                      value={adminEmail}
+                      onChange={(e) => setAdminEmail(e.target.value)}
+                      className="h-9 text-xs bg-background"
+                      required
+                    />
+                    <Input
+                      type="password"
+                      placeholder="Admin password"
+                      value={adminPassword}
+                      onChange={(e) => setAdminPassword(e.target.value)}
+                      className="h-9 text-xs bg-background"
+                      required
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="submit"
+                      disabled={signingIn}
+                      size="sm"
+                      className="text-xs font-semibold rounded-lg h-8.5 px-3.5"
+                    >
+                      {signingIn ? 'Connecting...' : 'Connect Admin Session'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => loadParts(true)}
+                      className="text-xs rounded-lg h-8.5"
+                    >
+                      <RefreshCw className="mr-1 h-3 w-3" />
+                      Re-Check
+                    </Button>
+                  </div>
+                </form>
+
+                <div className="rounded-xl border border-border/80 bg-muted/25 p-4 space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-semibold text-foreground">
+                      Option 2: Enable Public Read Policy in Supabase SQL Editor
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCopySql}
+                      className="h-7.5 px-2.5 text-[11px] font-semibold rounded-lg gap-1"
+                    >
+                      {copiedSql ? (
+                        <>
+                          <Check className="h-3 w-3 text-emerald-500" />
+                          <span>Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3 w-3 text-primary" />
+                          <span>Copy SQL</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <pre className="p-2.5 rounded-lg bg-slate-950 text-slate-200 font-mono text-[10px] overflow-x-auto leading-relaxed border border-slate-800">
+                    {PUBLIC_RLS_SQL_SNIPPET}
+                  </pre>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Filter, Search, Sort & Cart Control Strip */}
         <div className="space-y-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            {/* Category Filter Pills */}
+            {/* Category Filter Buttons */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-2 lg:pb-0 scrollbar-none">
               {categoryFilters.map((cat) => {
                 const isSelected = selectedCategory === cat.id;
@@ -371,7 +656,7 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
               })}
             </div>
 
-            {/* Search Input, Sort Selector & Cart Button */}
+            {/* Search Input, Theme-Based Sort Dropdown & Cart Button */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
               <div className="relative w-full sm:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -394,7 +679,6 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                 )}
               </div>
 
-              {/* Theme-Based Sort Dropdown & Cart Trigger */}
               <div className="flex items-center gap-2 shrink-0">
                 <div className="flex-1 sm:flex-initial sm:w-52">
                   <CustomSelect
@@ -410,6 +694,17 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                   />
                 </div>
 
+                <Button
+                  type="button"
+                  onClick={() => loadParts(true)}
+                  variant="outline"
+                  size="sm"
+                  aria-label="Refresh live inventory"
+                  className="h-9.5 px-3 rounded-xl text-xs font-semibold shrink-0"
+                >
+                  <RefreshCw className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
+                </Button>
+
                 {/* Quick Cart Trigger in Control Bar */}
                 <Button
                   type="button"
@@ -418,7 +713,8 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                   size="sm"
                   className={cn(
                     'h-9.5 px-3.5 rounded-xl text-xs font-semibold gap-1.5 shrink-0',
-                    totalItemsCount > 0 && 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
+                    totalItemsCount > 0 &&
+                      'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
                   )}
                 >
                   <ShoppingBag className="h-3.5 w-3.5" />
@@ -432,10 +728,19 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
           {!loading && !error && parts.length > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground pt-1">
               <span>
-                Showing <strong className="text-foreground font-mono">{filteredAndSortedParts.length}</strong> of{' '}
-                <strong className="text-foreground font-mono">{parts.length}</strong> live inventory items
+                Showing{' '}
+                <strong className="text-foreground font-mono">
+                  {filteredAndSortedParts.length}
+                </strong>{' '}
+                of{' '}
+                <strong className="text-foreground font-mono">
+                  {parts.length}
+                </strong>{' '}
+                live inventory items
               </span>
-              {(searchQuery || selectedCategory !== 'all' || sortBy !== 'default') && (
+              {(searchQuery ||
+                selectedCategory !== 'all' ||
+                sortBy !== 'default') && (
                 <button
                   type="button"
                   onClick={() => {
@@ -454,156 +759,230 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
 
         {/* Loading Skeletons */}
         {loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 py-4">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {Array.from({ length: 8 }).map((_, idx) => (
               <div
-                key={i}
-                className="h-96 rounded-2xl border border-border/70 bg-card/60 p-4 flex flex-col justify-between animate-pulse"
+                key={idx}
+                className="rounded-2xl border border-border/70 bg-card overflow-hidden p-4 space-y-4 animate-pulse"
               >
-                <div className="space-y-3">
-                  <div className="h-44 rounded-xl bg-muted/60" />
-                  <div className="h-5 w-3/4 rounded bg-muted/70" />
-                  <div className="h-3 w-1/2 rounded bg-muted/50" />
-                  <div className="h-6 w-1/3 rounded bg-muted/60" />
+                <div className="h-44 w-full rounded-xl bg-muted/70" />
+                <div className="space-y-2">
+                  <div className="h-3.5 w-24 rounded bg-muted/70" />
+                  <div className="h-5 w-3/4 rounded bg-muted/80" />
+                  <div className="h-4 w-1/2 rounded bg-muted/60" />
                 </div>
-                <div className="h-10 rounded-xl bg-muted/50" />
+                <div className="pt-3 border-t border-border/50 flex items-center justify-between">
+                  <div className="h-6 w-20 rounded bg-muted/80" />
+                  <div className="h-9 w-28 rounded-xl bg-muted/80" />
+                </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Error State */}
-        {error && (
-          <div className="p-6 rounded-2xl border border-destructive/30 bg-destructive/5 text-center space-y-3">
-            <AlertCircle className="h-8 w-8 text-destructive mx-auto" />
-            <h4 className="font-display font-bold text-sm text-foreground">
-              Unable to Load Spare Parts
-            </h4>
-            <p className="text-xs text-muted-foreground max-w-md mx-auto">{error}</p>
-            <Button
-              onClick={() => loadParts(true)}
-              size="sm"
-              variant="outline"
-              className="text-xs rounded-xl"
-            >
-              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-              Retry Connection
-            </Button>
+        {/* Database Error State */}
+        {!loading && error && (
+          <div className="rounded-2xl border border-destructive/40 bg-destructive/5 p-6 sm:p-8 text-center space-y-4 max-w-xl mx-auto">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-destructive/10 text-destructive mx-auto">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-display font-bold text-base sm:text-lg text-foreground">
+                Unable to Load Live Spare Parts Inventory
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                We encountered a temporary issue connecting to the inventory
+                database ({error}). You can retry or contact our parts desk on
+                WhatsApp.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+              <Button
+                onClick={() => loadParts(true)}
+                size="sm"
+                className="text-xs rounded-xl"
+              >
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                Retry Connection
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="text-xs rounded-xl"
+              >
+                <a
+                  href={`https://wa.me/${rawPhone}?text=${encodeURIComponent(
+                    "Hello Sohan Pipeline's, I would like to enquire about plumbing spare parts availability and pricing."
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MessageCircle className="mr-1.5 h-3.5 w-3.5 text-emerald-600" />
+                  WhatsApp Parts Desk
+                </a>
+              </Button>
+            </div>
           </div>
         )}
 
-        {/* Products Grid (When database items are present) */}
+        {/* Live Product Grid (When Database Has Matching Rows) */}
         {!loading && !error && filteredAndSortedParts.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {filteredAndSortedParts.map((part) => {
-              const imageUrl = resolveProductImage(part);
-              const cardQty = cardQuantities[part.id] || 1;
-              const inCartQty = cartQtyById[part.id] || 0;
+            {filteredAndSortedParts.map((part, index) => {
               const isOutOfStock =
-                part.stock !== null && part.stock !== undefined && part.stock <= 0;
-              const isLowStock =
                 part.stock !== null &&
                 part.stock !== undefined &&
-                part.stock > 0 &&
-                part.reorder_level !== null &&
-                part.reorder_level !== undefined &&
-                part.stock <= part.reorder_level;
+                part.stock <= 0;
+              const isLowStock =
+                !isOutOfStock &&
+                part.stock !== null &&
+                part.stock !== undefined &&
+                part.stock <= (part.reorder_level || 5);
+              const imageSrc = resolveProductImage(part);
+              const cardQty = getCardQuantity(part.id);
+              const inCartQty = cartQtyById[part.id] || 0;
 
               return (
                 <motion.div
                   key={part.id}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.22, ease: luxuryEasing }}
-                  whileHover={{ y: -3 }}
-                  className="gpu-accelerated h-full"
+                  transition={{
+                    duration: 0.3,
+                    delay: Math.min(index * 0.03, 0.25),
+                    ease: luxuryEasing,
+                  }}
                 >
-                  <Card className="h-full border border-border/80 bg-card hover:border-primary/50 transition-[border-color,box-shadow] duration-200 rounded-2xl overflow-hidden shadow-crisp-xs hover:shadow-crisp-md flex flex-col justify-between group">
+                  <Card
+                    className={cn(
+                      'group h-full rounded-2xl border bg-card overflow-hidden transition-all duration-200 flex flex-col justify-between shadow-crisp-xs hover:shadow-crisp-md',
+                      isOutOfStock
+                        ? 'border-border/60 opacity-85'
+                        : inCartQty > 0
+                        ? 'border-emerald-500/50 dark:border-emerald-500/40'
+                        : 'border-border/80 hover:border-primary/50'
+                    )}
+                  >
                     <div>
-                      {/* Product Visual Container with Supabase Storage Asset */}
-                      <div className="relative h-48 w-full bg-slate-950/5 dark:bg-slate-900/40 overflow-hidden border-b border-border/60">
+                      {/* Product Image Header */}
+                      <div className="relative h-48 w-full bg-slate-950/5 dark:bg-slate-950/40 overflow-hidden border-b border-border/60">
                         <Image
-                          src={imageUrl}
+                          src={imageSrc}
                           alt={part.name}
                           fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          className={cn(
+                            'object-cover transition-transform duration-500 group-hover:scale-105',
+                            isOutOfStock && 'grayscale-[40%]'
+                          )}
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                           referrerPolicy="no-referrer"
                         />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-transparent to-slate-950/20" />
 
-                        {/* Category Tag */}
-                        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-background/90 backdrop-blur-md text-foreground border border-border/70 shadow-xs">
+                        {/* Category & In-Cart Top Badges */}
+                        <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-1.5">
+                          <span className="px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-background/90 backdrop-blur-md text-foreground border border-border/70 shadow-2xs truncate max-w-[65%]">
                             {part.category || 'Plumbing Hardware'}
                           </span>
+
                           {inCartQty > 0 && (
-                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold font-mono bg-primary text-primary-foreground shadow-xs">
-                              In Cart: {inCartQty}
-                            </span>
+                            <button
+                              type="button"
+                              onClick={openCart}
+                              className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-600 text-white shadow-xs flex items-center gap-1 cursor-pointer hover:bg-emerald-700 transition-colors"
+                            >
+                              <Check className="h-2.5 w-2.5" />
+                              <span>In Cart ({inCartQty})</span>
+                            </button>
                           )}
                         </div>
 
-                        {/* SKU Badge */}
-                        {part.sku && (
-                          <div className="absolute top-2.5 right-2.5">
-                            <span className="font-mono text-[9px] font-bold px-2 py-0.5 rounded bg-slate-950/80 text-white backdrop-blur-sm">
-                              {part.sku}
+                        {/* Stock Status Badge Bottom-Right */}
+                        <div className="absolute bottom-2.5 right-3 left-3 flex items-center justify-between gap-2">
+                          {part.sku ? (
+                            <span className="text-[10px] font-mono text-white/90 bg-slate-950/70 backdrop-blur-xs px-2 py-0.5 rounded border border-white/15 truncate">
+                              SKU: {part.sku}
                             </span>
-                          </div>
-                        )}
+                          ) : (
+                            <span />
+                          )}
+
+                          <span
+                            className={cn(
+                              'px-2 py-0.5 rounded text-[10px] font-semibold backdrop-blur-md border shrink-0',
+                              isOutOfStock
+                                ? 'bg-destructive/90 text-white border-destructive'
+                                : isLowStock
+                                ? 'bg-amber-500/90 text-slate-950 border-amber-400 font-bold'
+                                : 'bg-emerald-600/90 text-white border-emerald-500/50'
+                            )}
+                          >
+                            {isOutOfStock
+                              ? 'Out of Stock'
+                              : isLowStock
+                              ? `Only ${part.stock} Left`
+                              : part.stock !== null && part.stock !== undefined
+                              ? `${part.stock} in Stock`
+                              : 'In Stock'}
+                          </span>
+                        </div>
                       </div>
 
-                      {/* Content Body */}
+                      {/* Product Info Body */}
                       <CardContent className="p-4 space-y-2.5">
-                        <h3 className="font-display font-bold text-sm text-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors">
-                          {part.name}
-                        </h3>
+                        <div>
+                          {part.brand && (
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-primary block mb-0.5">
+                              {part.brand}
+                            </span>
+                          )}
+                          <h3 className="font-display font-bold text-sm sm:text-base text-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+                            {part.name}
+                          </h3>
+                          {part.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+                              {part.description}
+                            </p>
+                          )}
+                        </div>
 
-                        {part.description && (
-                          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                            {part.description}
-                          </p>
-                        )}
-
-                        {/* Price & Stock Row */}
-                        <div className="flex items-baseline justify-between pt-2 border-t border-border/50">
+                        {/* Price & Stock Details Row */}
+                        <div className="pt-2 border-t border-border/60 flex items-baseline justify-between gap-2">
                           <div>
-                            <span className="text-[10px] uppercase font-semibold text-muted-foreground block">
-                              Verified Price
+                            <span className="text-[10px] text-muted-foreground block">
+                              Verified Counter Price
                             </span>
-                            <span className="font-display text-lg font-bold text-foreground font-mono">
-                              {part.selling_price ? `₹${part.selling_price.toLocaleString('en-IN')}` : 'Enquire'}
-                            </span>
-                            {part.unit && (
-                              <span className="text-[10px] text-muted-foreground ml-1">
-                                / {part.unit}
+                            {part.selling_price !== null &&
+                            part.selling_price !== undefined &&
+                            Number(part.selling_price) > 0 ? (
+                              <div className="flex items-baseline gap-1">
+                                <span className="font-mono font-extrabold text-lg text-foreground">
+                                  ₹
+                                  {Number(part.selling_price).toLocaleString(
+                                    'en-IN'
+                                  )}
+                                </span>
+                                {part.unit && (
+                                  <span className="text-[10px] text-muted-foreground">
+                                    / {part.unit}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-xs font-semibold text-primary">
+                                Price on Enquiry
                               </span>
                             )}
                           </div>
 
-                          {/* Stock Status Badge */}
-                          <div>
-                            {isOutOfStock ? (
-                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-destructive/10 text-destructive border border-destructive/20 inline-flex items-center gap-1">
-                                <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
-                                Out of Stock
-                              </span>
-                            ) : isLowStock ? (
-                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 inline-flex items-center gap-1">
-                                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                                Only {part.stock} left
-                              </span>
-                            ) : part.stock !== null && part.stock !== undefined ? (
-                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 inline-flex items-center gap-1">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                In Stock ({part.stock})
-                              </span>
-                            ) : (
-                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 inline-flex items-center gap-1">
-                                <Check className="h-3 w-3" />
-                                Available
-                              </span>
-                            )}
+                          <div className="text-right">
+                            <span className="text-[10px] text-muted-foreground block">
+                              Dispatch
+                            </span>
+                            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                              {isOutOfStock ? 'On Restock' : 'Ready Today'}
+                            </span>
                           </div>
                         </div>
                       </CardContent>
@@ -612,12 +991,13 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                     {/* Bottom Actions: Stepper + Add to Cart + Quick WhatsApp */}
                     <div className="p-4 pt-0 space-y-2">
                       <div className="flex items-center gap-2">
-                        {/* Quantity Stepper */}
                         {!isOutOfStock && (
                           <div className="flex items-center rounded-xl border border-border/80 bg-muted/40 p-0.5 shrink-0">
                             <button
                               type="button"
-                              onClick={() => handleQuantityChange(part.id, -1, part.stock)}
+                              onClick={() =>
+                                handleQuantityChange(part.id, -1, part.stock)
+                              }
                               disabled={cardQty <= 1}
                               className="h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
                               aria-label="Decrease quantity"
@@ -629,8 +1009,14 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                             </span>
                             <button
                               type="button"
-                              onClick={() => handleQuantityChange(part.id, 1, part.stock)}
-                              disabled={part.stock !== null && part.stock !== undefined && cardQty >= part.stock}
+                              onClick={() =>
+                                handleQuantityChange(part.id, 1, part.stock)
+                              }
+                              disabled={
+                                part.stock !== null &&
+                                part.stock !== undefined &&
+                                cardQty >= part.stock
+                              }
                               className="h-8 w-8 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
                               aria-label="Increase quantity"
                             >
@@ -639,18 +1025,18 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                           </div>
                         )}
 
-                        {/* Add to Cart Button */}
                         <Button
                           onClick={() => handleAddToCart(part)}
                           disabled={isOutOfStock}
                           className="flex-1 font-semibold text-xs h-9.5 rounded-xl shadow-xs gap-1.5"
                         >
                           <ShoppingBag className="h-3.5 w-3.5" />
-                          <span>{isOutOfStock ? 'Unavailable' : 'Add to Cart'}</span>
+                          <span>
+                            {isOutOfStock ? 'Unavailable' : 'Add to Cart'}
+                          </span>
                         </Button>
                       </div>
 
-                      {/* Direct Quick WhatsApp Button (Native Anchor) */}
                       <Button
                         asChild
                         variant="outline"
@@ -674,9 +1060,119 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
           </div>
         )}
 
-        {/* Empty State / Warehouse Desk (When 0 items match filter or table has 0 rows) */}
+        {/* Empty / RLS Diagnostic State (When 0 rows are returned from public.spare_parts) */}
         {!loading && !error && filteredAndSortedParts.length === 0 && (
           <div className="space-y-8">
+            {/* If 0 items are in parts and caller is unauthenticated (`anon`), explain RLS & offer instant Admin Sync + 1-click SQL Policy */}
+            {parts.length === 0 && rlsBlocked && (
+              <div className="rounded-3xl border border-amber-500/40 bg-card p-6 sm:p-8 shadow-crisp-md space-y-6">
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 border-b border-border/70 pb-5">
+                  <div className="flex items-start gap-3.5">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-500 shrink-0 mt-0.5">
+                      <Database className="h-5 w-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="font-display font-bold text-base sm:text-lg text-foreground">
+                        Admin Panel Spare Parts Detected Behind Supabase RLS
+                      </h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl">
+                        Your <code className="font-mono text-foreground">public.spare_parts</code> table has Row Level Security (RLS) enabled for{' '}
+                        <code className="font-mono text-foreground">authenticated</code> Admin Panel users, which hides rows from anonymous (<code className="font-mono text-foreground">anon</code>) public visitors. Connect your Admin session below to view your parts immediately, or run the 1-click SQL policy in Supabase so all public customers can see them.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                  {/* Option 1: Sign in with Admin Panel Credentials to View Immediately */}
+                  <form
+                    onSubmit={handleAdminSignIn}
+                    className="rounded-2xl border border-border/80 bg-muted/25 p-5 space-y-4"
+                  >
+                    <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                      <KeyRound className="h-4 w-4 text-primary" />
+                      <span>Option 1: Connect Admin Panel Session in Browser</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Sign in with your Supabase Admin Panel email and password to authenticate this browser and load your <code className="font-mono">spare_parts</code> inventory immediately.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <Input
+                        type="email"
+                        placeholder="Admin email address"
+                        value={adminEmail}
+                        onChange={(e) => setAdminEmail(e.target.value)}
+                        className="h-10 text-xs bg-background"
+                        required
+                      />
+                      <Input
+                        type="password"
+                        placeholder="Admin password"
+                        value={adminPassword}
+                        onChange={(e) => setAdminPassword(e.target.value)}
+                        className="h-10 text-xs bg-background"
+                        required
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="submit"
+                        disabled={signingIn}
+                        size="sm"
+                        className="text-xs font-semibold rounded-xl h-9 px-4"
+                      >
+                        {signingIn ? 'Connecting...' : 'Connect Admin & Load Parts'}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => loadParts(true)}
+                        className="text-xs rounded-xl h-9"
+                      >
+                        <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                        Re-Check Table
+                      </Button>
+                    </div>
+                  </form>
+
+                  {/* Option 2: 1-Click Copy Public SELECT RLS Policy for All Visitors */}
+                  <div className="rounded-2xl border border-border/80 bg-muted/25 p-5 space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-semibold text-foreground">
+                        Option 2: Enable Public Read Access in Supabase SQL Editor
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCopySql}
+                        className="h-8 px-3 text-xs font-semibold rounded-lg gap-1.5"
+                      >
+                        {copiedSql ? (
+                          <>
+                            <Check className="h-3.5 w-3.5 text-emerald-500" />
+                            <span>Copied SQL</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3.5 w-3.5 text-primary" />
+                            <span>Copy SQL Policy</span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Paste and run this once in your Supabase Dashboard → <strong>SQL Editor</strong> so every customer visiting your website can view your Admin Panel spare parts automatically:
+                    </p>
+                    <pre className="p-3 rounded-xl bg-slate-950 text-slate-200 font-mono text-[11px] overflow-x-auto leading-relaxed border border-slate-800">
+                      {PUBLIC_RLS_SQL_SNIPPET}
+                    </pre>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="rounded-3xl border border-border/80 bg-card p-6 sm:p-10 shadow-crisp-md text-center space-y-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary mx-auto">
                 <Package className="h-7 w-7" />
@@ -755,7 +1251,8 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                     Authorized Hardware Lines &amp; Trade Brand Directory
                   </h4>
                   <p className="text-xs text-muted-foreground">
-                    Direct counter supply from our Keshrambha &amp; Dantan warehouse across Paschim and Purba Medinipur
+                    Direct counter supply from our Keshrambha &amp; Dantan
+                    warehouse across Paschim and Purba Medinipur
                   </p>
                 </div>
               </div>
@@ -839,7 +1336,8 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                 </div>
                 <div className="min-w-0">
                   <span className="text-[11px] text-slate-300 dark:text-muted-foreground block font-medium truncate">
-                    {totalItemsCount} {totalItemsCount === 1 ? 'item' : 'items'} in cart
+                    {totalItemsCount}{' '}
+                    {totalItemsCount === 1 ? 'item' : 'items'} in cart
                   </span>
                   <span className="font-mono text-sm sm:text-base font-bold text-white dark:text-foreground truncate block">
                     Subtotal: ₹{subtotal.toLocaleString('en-IN')}
