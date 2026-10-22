@@ -28,6 +28,7 @@ import {
   Printer,
   MessageSquare,
   ShieldCheck,
+  Star,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -972,6 +973,13 @@ function BookingWizard() {
                   <Link href={`/find-booking?id=${bookingId}`}>
                     <Search className="mr-2 h-4 w-4" />
                     Track Booking
+                  </Link>
+                </Button>
+
+                <Button asChild variant="outline" className="border-primary/40 text-primary hover:bg-primary/5">
+                  <Link href={`/reviews?bookingId=${encodeURIComponent(bookingId)}#write-review`}>
+                    <Star className="mr-2 h-4 w-4 fill-amber-400 text-amber-400" />
+                    Give Work Review
                   </Link>
                 </Button>
 

@@ -2,260 +2,264 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft,
   ArrowRight,
-  RotateCcw,
+  CloudRain,
+  SunDim,
+  CloudLightning,
   Pause,
   Play,
-  Camera,
-  ChevronDown,
-  ChevronUp,
+  Phone,
+  Wrench,
+  Calendar,
+  Search,
+  Package,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/brand-logo';
 import { Button } from '@/components/ui/button';
 import {
-  Cinematic404Scene,
-  type CameraPreset,
-} from '@/components/cinematic-404-scene';
+  MonsoonPipelineErrorScene,
+  type WeatherMood,
+} from '@/components/monsoon-pipeline-error-scene';
+import { businessInfo } from '@/lib/business-info';
 import { cn } from '@/lib/utils';
 
-const PRODUCT_RECOVERY_LINKS = [
-  { label: 'Pipes', href: '/spare-parts?category=pipes' },
-  { label: 'Fittings', href: '/spare-parts?category=pipes&q=Fitting' },
-  { label: 'Valves', href: '/spare-parts?category=valves' },
-  { label: 'Spare Parts', href: '/spare-parts' },
-  { label: 'Plumbing Solutions', href: '/services' },
+const RECOVERY_DESTINATIONS = [
+  { label: 'Plumbing Services', href: '/services', icon: Wrench },
+  { label: 'Book a Plumber', href: '/book', icon: Calendar },
+  { label: 'Track Booking', href: '/find-booking', icon: Search },
+  { label: 'Spare Parts Counter', href: '/spare-parts', icon: Package },
+];
+
+const WEATHER_MOODS: Array<{
+  id: WeatherMood;
+  label: string;
+  subtitle: string;
+  icon: typeof CloudRain;
+}> = [
+  {
+    id: 'monsoon-night',
+    label: 'Monsoon Night',
+    subtitle: 'Heavy downpour · Worksite floodlights & wet street reflections',
+    icon: CloudRain,
+  },
+  {
+    id: 'dusk-drizzle',
+    label: 'Evening Drizzle',
+    subtitle: 'Warm twilight mist · Pedestrians crossing with umbrellas',
+    icon: SunDim,
+  },
+  {
+    id: 'storm-daylight',
+    label: 'Storm Overcast',
+    subtitle: 'High-contrast monsoon sky · Active main pipeline repair crew',
+    icon: CloudLightning,
+  },
 ];
 
 export default function NotFound() {
-  const [cameraPreset, setCameraPreset] = React.useState<CameraPreset>('cinema');
+  const [mood, setMood] = React.useState<WeatherMood>('monsoon-night');
   const [isPaused, setIsPaused] = React.useState(false);
-  const [replayTrigger, setReplayTrigger] = React.useState(0);
-  const [controlsCollapsed, setControlsCollapsed] = React.useState(false);
+
+  const activeMoodObj =
+    WEATHER_MOODS.find((m) => m.id === mood) || WEATHER_MOODS[0];
 
   return (
-    <section
+    <motion.section
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
       aria-labelledby="not-found-headline"
-      className="relative min-h-[calc(100vh-4rem)] w-full bg-[#050913] text-slate-100 overflow-hidden flex flex-col justify-between select-none"
+      className="relative min-h-[calc(100vh-4rem)] w-full bg-[#040814] text-slate-100 overflow-hidden flex flex-col justify-between select-none"
     >
-      {/* Real-Time 3D WebGL Rainy Industrial City & Monumental 404 Pipeline Scene */}
-      <Cinematic404Scene
-        cameraPreset={cameraPreset}
-        isPaused={isPaused}
-        replayTrigger={replayTrigger}
-      />
+      {/* Smooth Crossfade Atmospheric Monsoon Pipeline & Umbrella Pedestrians Canvas */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={mood}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute inset-0"
+        >
+          <MonsoonPipelineErrorScene
+            mood={mood}
+            isPaused={isPaused}
+            errorCode="404"
+          />
+        </motion.div>
+      </AnimatePresence>
 
-      {/* Subtle Vignette Readability Gradients (Preserves 3D Scene Visibility) */}
+      {/* Subtle Readability Gradient Overlays (Preserving Full View of the Street & Pipeline Scene) */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_34%,transparent_22%,rgba(5,9,19,0.52)_68%,rgba(5,9,19,0.9)_100%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-[#040814]/90 via-[#040814]/45 to-transparent"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[58%] bg-gradient-to-t from-[#050913] via-[#050913]/80 to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[#040814]/95 via-[#040814]/60 to-transparent"
       />
 
-      {/* Top Scene Navigation Bar: Sohan Pipelines Logo Left, Restrained Back to Home Right */}
-      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 sm:pt-7 flex items-center justify-between gap-4">
+      {/* Top Bar: Brand Identity & Smooth Atmosphere Switcher */}
+      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 flex flex-wrap items-center justify-between gap-4">
         <Link
           href="/"
-          aria-label="Sohan Pipelines Home"
-          className="inline-flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 rounded-lg"
+          className="inline-flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 rounded-xl"
         >
           <BrandLogo className="h-9 w-9 sm:h-10 sm:w-10" />
           <div className="flex flex-col">
             <span className="font-display text-sm sm:text-base font-bold tracking-tight text-white group-hover:text-sky-300 transition-colors">
-              SOHAN PIPELINES
+              Sohan Pipeline&apos;s &amp; Plumbing
             </span>
-            <span className="text-[11px] text-slate-400 hidden sm:inline">
-              Industrial &amp; Residential Plumbing Infrastructure
+            <span className="text-[11px] text-slate-300/80 hidden sm:inline">
+              24/7 Monsoon &amp; Emergency Pipeline Engineering
             </span>
           </div>
         </Link>
 
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-200 hover:text-white bg-[#090d16]/80 hover:bg-[#0f172a] border border-slate-800/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-        >
-          <ArrowLeft className="h-3.5 w-3.5 text-sky-400" />
-          <span>Back to Home</span>
-        </Link>
-      </div>
-
-      {/* Unobstructed Upper-Center 3D Viewport Showcase Zone for the 404 Monument */}
-      <div
-        aria-hidden="true"
-        className="relative z-10 flex-1 min-h-[240px] sm:min-h-[300px] lg:min-h-[340px] pointer-events-none"
-      />
-
-      {/* Foreground Content & Recovery Actions (Immediately Interactive) */}
-      <div className="relative z-20 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-10 flex flex-col items-center text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-          className="space-y-3 sm:space-y-4 max-w-2xl"
-        >
-          {/* Eyebrow */}
-          <p className="text-[11px] sm:text-xs font-mono font-semibold uppercase tracking-[0.22em] text-sky-400">
-            PAGE NOT FOUND
-          </p>
-
-          {/* Headline */}
-          <h1
-            id="not-found-headline"
-            className="font-display text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white leading-[1.12] [text-wrap:balance]"
-          >
-            Looks like this route has gone off the pipeline.
-          </h1>
-
-          {/* Supporting Text */}
-          <p className="text-sm sm:text-base md:text-lg text-slate-300 font-normal leading-relaxed">
-            Let&apos;s get you back on track.
-          </p>
-        </motion.div>
-
-        {/* Primary & Secondary CTAs */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.65, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-6 sm:mt-7 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 w-full sm:w-auto"
-        >
-          <Button
-            asChild
-            size="lg"
-            className="h-11 sm:h-12 px-7 text-xs sm:text-sm font-semibold bg-sky-500 hover:bg-sky-400 text-slate-950 shadow-lg shadow-sky-500/20 border-0 focus-visible:ring-2 focus-visible:ring-sky-300"
-          >
-            <Link href="/">
-              <span>Back to Home</span>
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-
-          <Button
-            asChild
-            variant="outline"
-            size="lg"
-            className="h-11 sm:h-12 px-7 text-xs sm:text-sm font-semibold bg-[#0b1220]/85 hover:bg-[#162136] text-slate-100 border-slate-700/90 hover:border-sky-400/60 focus-visible:ring-2 focus-visible:ring-sky-400"
-          >
-            <Link href="/spare-parts">
-              <span>Explore Products</span>
-            </Link>
-          </Button>
-        </motion.div>
-
-        {/* Subtle Product-Navigation Recovery Strip */}
-        <motion.nav
-          aria-label="Product categories and solutions"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.65, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-7 sm:mt-8 pt-4 border-t border-slate-800/80 w-full max-w-2xl flex flex-wrap items-center justify-center gap-x-3 sm:gap-x-5 gap-y-2 text-xs sm:text-sm"
-        >
-          {PRODUCT_RECOVERY_LINKS.map((item, idx) => (
-            <React.Fragment key={item.label}>
-              {idx > 0 && (
-                <span aria-hidden="true" className="text-slate-600 select-none">
-                  ·
-                </span>
-              )}
-              <Link
-                href={item.href}
-                className="text-slate-300 hover:text-sky-300 font-medium transition-colors underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 rounded px-1 py-0.5"
+        {/* Smooth Atmosphere Transition Pills */}
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-950/75 backdrop-blur-md border border-slate-800/80">
+          {WEATHER_MOODS.map((item) => {
+            const Icon = item.icon;
+            const active = mood === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setMood(item.id)}
+                className={cn(
+                  'relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer',
+                  active
+                    ? 'text-slate-950'
+                    : 'text-slate-300 hover:text-white'
+                )}
               >
-                {item.label}
-              </Link>
-            </React.Fragment>
-          ))}
-        </motion.nav>
+                {active && (
+                  <motion.span
+                    layoutId="errorMoodPill"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    className="absolute inset-0 rounded-lg bg-sky-400 -z-10 shadow-sm"
+                  />
+                )}
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+                <span className="hidden md:inline">{item.label}</span>
+              </button>
+            );
+          })}
 
-        {/* Sleek Collapsible Bottom Scene & Camera Control Dock */}
-        <div className="mt-6 flex flex-col items-center">
           <button
             type="button"
-            onClick={() => setControlsCollapsed((prev) => !prev)}
-            aria-expanded={!controlsCollapsed}
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-t-lg text-[11px] font-medium text-slate-400 hover:text-slate-200 bg-[#090d16]/85 border border-b-0 border-slate-800/80 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+            onClick={() => setIsPaused((prev) => !prev)}
+            aria-label={isPaused ? 'Resume animation' : 'Pause animation'}
+            className="ml-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800/70 transition-colors cursor-pointer inline-flex items-center gap-1"
           >
-            {controlsCollapsed ? (
-              <>
-                <ChevronUp className="h-3 w-3 text-sky-400" />
-                <span>Show Scene Controls</span>
-              </>
+            {isPaused ? (
+              <Play className="h-3.5 w-3.5 text-emerald-400" />
             ) : (
-              <>
-                <ChevronDown className="h-3 w-3 text-sky-400" />
-                <span>Hide Controls</span>
-              </>
+              <Pause className="h-3.5 w-3.5 text-amber-400" />
             )}
           </button>
-
-          {!controlsCollapsed && (
-            <div className="flex flex-wrap items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-[#090d16]/90 border border-slate-800/90 text-xs">
-              <div className="flex items-center gap-1 pr-2 border-r border-slate-800">
-                <Camera className="h-3.5 w-3.5 text-sky-400 mr-1 hidden sm:inline" />
-                {(
-                  [
-                    { id: 'cinema', label: 'Cinema View' },
-                    { id: 'monument', label: '404 Close-Up' },
-                    { id: 'street', label: 'Street Angle' },
-                  ] as const
-                ).map((preset) => (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => setCameraPreset(preset.id)}
-                    className={cn(
-                      'px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400',
-                      cameraPreset === preset.id
-                        ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                    )}
-                  >
-                    {preset.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsPaused(false);
-                    setReplayTrigger((c) => c + 1);
-                  }}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium text-slate-300 hover:text-white hover:bg-slate-800/70 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-                >
-                  <RotateCcw className="h-3 w-3 text-sky-400" />
-                  <span>Replay Alignment</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setIsPaused((p) => !p)}
-                  aria-pressed={isPaused}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium text-slate-300 hover:text-white hover:bg-slate-800/70 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
-                >
-                  {isPaused ? (
-                    <>
-                      <Play className="h-3 w-3 text-emerald-400" />
-                      <span>Resume Motion</span>
-                    </>
-                  ) : (
-                    <>
-                      <Pause className="h-3 w-3 text-amber-400" />
-                      <span>Pause Scene</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
-    </section>
+
+      {/* Main Editorial 404 Callout (Positioned in Upper-Right / Center to Keep the Left Pipeline Crew & Roadway Crosswalk Unobstructed) */}
+      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-auto py-8 flex flex-col lg:items-end">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-xl rounded-3xl border border-white/12 bg-slate-950/65 backdrop-blur-xl p-6 sm:p-8 shadow-2xl space-y-5"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-[0.18em] text-amber-400 font-semibold">
+              <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+              ERROR 404 · ROUTE DIVERSION
+            </span>
+            <span className="text-[11px] font-mono text-sky-300/90">
+              {activeMoodObj.label}
+            </span>
+          </div>
+
+          <div className="space-y-2.5">
+            <h1
+              id="not-found-headline"
+              className="font-display text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-white leading-[1.15]"
+            >
+              Road Closed Ahead — Our Crew Is Repairing the Main Pipeline.
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              Even in heavy monsoon rain, our master technicians are out on the street sealing the main water line while commuters cross under their umbrellas. The page address you entered is currently unavailable—let us guide you back to dry ground.
+            </p>
+          </div>
+
+          {/* Primary Recovery Buttons */}
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            <Button
+              asChild
+              size="lg"
+              className="h-11 px-6 rounded-xl text-xs sm:text-sm font-semibold bg-sky-400 hover:bg-sky-300 text-slate-950 shadow-lg shadow-sky-500/20"
+            >
+              <Link href="/">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Return to Home Page
+              </Link>
+            </Button>
+
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="h-11 px-5 rounded-xl text-xs sm:text-sm font-semibold border-slate-700 bg-slate-900/80 text-white hover:bg-slate-800 hover:text-white"
+            >
+              <Link href="/book">
+                Book a Service Visit
+                <ArrowRight className="ml-2 h-4 w-4 text-sky-400" />
+              </Link>
+            </Button>
+
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="h-11 px-4 rounded-xl text-xs sm:text-sm font-semibold border-slate-700/80 bg-slate-900/60 text-slate-200 hover:bg-slate-800 hover:text-white"
+            >
+              <a href={`tel:${businessInfo.phone}`}>
+                <Phone className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
+                {businessInfo.phoneDisplay}
+              </a>
+            </Button>
+          </div>
+
+          {/* Quick Navigation Grid */}
+          <div className="pt-4 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {RECOVERY_DESTINATIONS.map((dest) => {
+              const Icon = dest.icon;
+              return (
+                <Link
+                  key={dest.href}
+                  href={dest.href}
+                  className="group flex items-center gap-2 p-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.1] border border-white/8 transition-all text-xs font-medium text-slate-200 hover:text-sky-300"
+                >
+                  <Icon className="h-3.5 w-3.5 text-sky-400 shrink-0" />
+                  <span className="truncate">{dest.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Bottom Live Scene Caption Bar */}
+      <div className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400">
+        <p className="font-mono text-[11px] text-slate-300/90">
+          Scene: {activeMoodObj.subtitle}
+        </p>
+        <p className="text-[11px] text-slate-400">
+          Move cursor across the street scene to shift camera perspective
+        </p>
+      </div>
+    </motion.section>
   );
 }

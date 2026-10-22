@@ -198,6 +198,303 @@ export async function fetchLiveServices(options: { forceRefresh?: boolean } = {}
   return inflightServicesPromise;
 }
 
+const REGIONAL_PINCODE_DIRECTORY: Record<
+  string,
+  { pincode: string; district: string; block: string; subdivision: string }
+> = {
+  belda: {
+    pincode: '721424',
+    district: 'West Medinipur',
+    block: 'Narayangarh',
+    subdivision: 'Kharagpur',
+  },
+  keshrambha: {
+    pincode: '721451',
+    district: 'West Medinipur',
+    block: 'Dantan-I',
+    subdivision: 'Kharagpur',
+  },
+  bahardaltitia: {
+    pincode: '721451',
+    district: 'West Medinipur',
+    block: 'Dantan-I',
+    subdivision: 'Kharagpur',
+  },
+  dantan: {
+    pincode: '721426',
+    district: 'West Medinipur',
+    block: 'Dantan-I',
+    subdivision: 'Kharagpur',
+  },
+  narayangarh: {
+    pincode: '721437',
+    district: 'West Medinipur',
+    block: 'Narayangarh',
+    subdivision: 'Kharagpur',
+  },
+  kharagpur: {
+    pincode: '721301',
+    district: 'West Medinipur',
+    block: 'Kharagpur',
+    subdivision: 'Kharagpur',
+  },
+  midnapore: {
+    pincode: '721101',
+    district: 'West Medinipur',
+    block: 'Midnapore Sadar',
+    subdivision: 'Medinipur Sadar',
+  },
+  medinipur: {
+    pincode: '721101',
+    district: 'West Medinipur',
+    block: 'Midnapore Sadar',
+    subdivision: 'Medinipur Sadar',
+  },
+  debra: {
+    pincode: '721126',
+    district: 'West Medinipur',
+    block: 'Debra',
+    subdivision: 'Kharagpur',
+  },
+  pingla: {
+    pincode: '721140',
+    district: 'West Medinipur',
+    block: 'Pingla',
+    subdivision: 'Kharagpur',
+  },
+  sabang: {
+    pincode: '721144',
+    district: 'West Medinipur',
+    block: 'Sabang',
+    subdivision: 'Kharagpur',
+  },
+  keshiary: {
+    pincode: '721133',
+    district: 'West Medinipur',
+    block: 'Keshiary',
+    subdivision: 'Kharagpur',
+  },
+  mohanpur: {
+    pincode: '721436',
+    district: 'West Medinipur',
+    block: 'Mohanpur',
+    subdivision: 'Kharagpur',
+  },
+  makrampur: {
+    pincode: '721437',
+    district: 'West Medinipur',
+    block: 'Narayangarh',
+    subdivision: 'Kharagpur',
+  },
+  bakhrabad: {
+    pincode: '721424',
+    district: 'West Medinipur',
+    block: 'Narayangarh',
+    subdivision: 'Kharagpur',
+  },
+  khakurda: {
+    pincode: '721445',
+    district: 'West Medinipur',
+    block: 'Narayangarh',
+    subdivision: 'Kharagpur',
+  },
+  angus: {
+    pincode: '721426',
+    district: 'West Medinipur',
+    block: 'Dantan-I',
+    subdivision: 'Kharagpur',
+  },
+  menkapur: {
+    pincode: '721435',
+    district: 'West Medinipur',
+    block: 'Dantan-II',
+    subdivision: 'Kharagpur',
+  },
+  khandrui: {
+    pincode: '721451',
+    district: 'West Medinipur',
+    block: 'Dantan-II',
+    subdivision: 'Kharagpur',
+  },
+  turka: {
+    pincode: '721445',
+    district: 'West Medinipur',
+    block: 'Dantan-II',
+    subdivision: 'Kharagpur',
+  },
+  ghatal: {
+    pincode: '721212',
+    district: 'West Medinipur',
+    block: 'Ghatal',
+    subdivision: 'Ghatal',
+  },
+  chandrakona: {
+    pincode: '721201',
+    district: 'West Medinipur',
+    block: 'Chandrakona',
+    subdivision: 'Ghatal',
+  },
+  daspur: {
+    pincode: '721211',
+    district: 'West Medinipur',
+    block: 'Daspur',
+    subdivision: 'Ghatal',
+  },
+  keshpur: {
+    pincode: '721150',
+    district: 'West Medinipur',
+    block: 'Keshpur',
+    subdivision: 'Medinipur Sadar',
+  },
+  salboni: {
+    pincode: '721147',
+    district: 'West Medinipur',
+    block: 'Salboni',
+    subdivision: 'Medinipur Sadar',
+  },
+  garhbeta: {
+    pincode: '721127',
+    district: 'West Medinipur',
+    block: 'Garhbeta',
+    subdivision: 'Medinipur Sadar',
+  },
+  contai: {
+    pincode: '721401',
+    district: 'Purba Medinipur',
+    block: 'Contai',
+    subdivision: 'Contai',
+  },
+  kanthi: {
+    pincode: '721401',
+    district: 'Purba Medinipur',
+    block: 'Contai',
+    subdivision: 'Contai',
+  },
+  egra: {
+    pincode: '721429',
+    district: 'Purba Medinipur',
+    block: 'Egra',
+    subdivision: 'Egra',
+  },
+  patashpur: {
+    pincode: '721439',
+    district: 'Purba Medinipur',
+    block: 'Patashpur',
+    subdivision: 'Egra',
+  },
+  potashpur: {
+    pincode: '721439',
+    district: 'Purba Medinipur',
+    block: 'Patashpur',
+    subdivision: 'Egra',
+  },
+  bhagwanpur: {
+    pincode: '721601',
+    district: 'Purba Medinipur',
+    block: 'Bhagwanpur',
+    subdivision: 'Egra',
+  },
+  digha: {
+    pincode: '721428',
+    district: 'Purba Medinipur',
+    block: 'Ramnagar',
+    subdivision: 'Contai',
+  },
+  ramnagar: {
+    pincode: '721441',
+    district: 'Purba Medinipur',
+    block: 'Ramnagar',
+    subdivision: 'Contai',
+  },
+  tamluk: {
+    pincode: '721636',
+    district: 'Purba Medinipur',
+    block: 'Tamluk',
+    subdivision: 'Tamluk',
+  },
+  panskura: {
+    pincode: '721139',
+    district: 'Purba Medinipur',
+    block: 'Panskura',
+    subdivision: 'Tamluk',
+  },
+  kolaghat: {
+    pincode: '721134',
+    district: 'Purba Medinipur',
+    block: 'Kolaghat',
+    subdivision: 'Tamluk',
+  },
+  haldia: {
+    pincode: '721602',
+    district: 'Purba Medinipur',
+    block: 'Haldia',
+    subdivision: 'Haldia',
+  },
+  jhargram: {
+    pincode: '721507',
+    district: 'Jhargram',
+    block: 'Jhargram',
+    subdivision: 'Jhargram',
+  },
+  gopiballavpur: {
+    pincode: '721506',
+    district: 'Jhargram',
+    block: 'Gopiballavpur',
+    subdivision: 'Jhargram',
+  },
+  nayagram: {
+    pincode: '721125',
+    district: 'Jhargram',
+    block: 'Nayagram',
+    subdivision: 'Jhargram',
+  },
+  jaleswar: {
+    pincode: '756032',
+    district: 'Balasore',
+    block: 'Jaleswar',
+    subdivision: 'Balasore',
+  },
+};
+
+function enrichDbServiceArea(row: DbServiceArea): DbServiceArea {
+  const cleanLocality = (row.locality || '').trim();
+  const key = cleanLocality.toLowerCase();
+  const matched =
+    REGIONAL_PINCODE_DIRECTORY[key] ||
+    Object.entries(REGIONAL_PINCODE_DIRECTORY).find(
+      ([k]) => key.includes(k) || k.includes(key)
+    )?.[1];
+
+  const resolvedPincode =
+    row.pincode && String(row.pincode).trim()
+      ? String(row.pincode).trim()
+      : matched?.pincode || '721451';
+
+  const resolvedDistrict =
+    row.district && String(row.district).trim()
+      ? String(row.district).trim()
+      : matched?.district || 'West Medinipur';
+
+  const resolvedBlock =
+    row.block && String(row.block).trim()
+      ? String(row.block).trim()
+      : matched?.block || null;
+
+  const resolvedSubdivision =
+    row.subdivision && String(row.subdivision).trim()
+      ? String(row.subdivision).trim()
+      : matched?.subdivision || null;
+
+  return {
+    ...row,
+    locality: cleanLocality,
+    pincode: resolvedPincode,
+    district: resolvedDistrict,
+    block: resolvedBlock,
+    subdivision: resolvedSubdivision,
+  };
+}
+
 export async function fetchLiveServiceAreas(options: { forceRefresh?: boolean } = {}): Promise<{ data: DbServiceArea[]; error: string | null }> {
   const { forceRefresh = false } = options;
 
@@ -222,12 +519,14 @@ export async function fetchLiveServiceAreas(options: { forceRefresh?: boolean } 
         return { data: areasCache?.data ?? [], error: error.message };
       }
 
-      const freshData = (data as DbServiceArea[]) ?? [];
+      const freshData = ((data as DbServiceArea[]) ?? []).map(enrichDbServiceArea);
       if (freshData.length > 0) {
         areasCache = {
           data: freshData,
           timestamp: Date.now(),
         };
+      } else {
+        areasCache = null;
       }
       return { data: freshData, error: null };
     } catch (err) {
@@ -308,9 +607,15 @@ export async function fetchLiveReviews(options: { forceRefresh?: boolean } = {})
  * - selling_price: numeric
  * - purchase_price: numeric
  * - reorder_level: integer
- * - supplier_id: uuid
+ * - supplier_id: uuid (foreign key -> public.suppliers.id)
+ * - image_path: text (storage path in the "Spare Parts" Supabase Storage bucket)
  * - created_at: timestamptz
  */
+export interface DbSparePartSupplier {
+  id: string;
+  name: string;
+}
+
 export interface DbSparePart {
   id: string;
   name: string;
@@ -321,213 +626,34 @@ export interface DbSparePart {
   purchase_price?: number | null;
   reorder_level?: number | null;
   supplier_id?: string | null;
+  image_path?: string | null;
   created_at?: string;
+  suppliers?: DbSparePartSupplier | DbSparePartSupplier[] | null;
   brand?: string | null;
   description?: string | null;
   image_url?: string | null;
   unit?: string | null;
 }
 
-export const WAREHOUSE_CATALOG_SPARE_PARTS: DbSparePart[] = [
-  {
-    id: 'a1b2c3d4-1001-4000-8000-000000000001',
-    name: 'Astral CPVC Pro 1 Inch Heavy Duty Ball Valve',
-    category: 'Valves & Controls',
-    sku: 'AST-CPVC-BV-100',
-    stock: 24,
-    selling_price: 380,
-    purchase_price: 270,
-    reorder_level: 5,
-    brand: 'Astral Pipes',
-    unit: 'pc',
-    description:
-      'Heavy-duty SDR-11 hot and cold water compatible CPVC ball valve with EPDM seals and ergonomic quarter-turn handle.',
-    created_at: '2026-10-14T10:00:00.000Z',
-  },
-  {
-    id: 'a1b2c3d4-1002-4000-8000-000000000002',
-    name: 'Supreme UPVC Schedule 80 1.25 Inch Pipe (3m Length)',
-    category: 'Pipes & Fittings',
-    sku: 'SUP-UPVC-P-125',
-    stock: 40,
-    selling_price: 460,
-    purchase_price: 340,
-    reorder_level: 10,
-    brand: 'Supreme Industries',
-    unit: '3m length',
-    description:
-      'High-pressure Schedule 80 lead-free UPVC potable water distribution pipe, UV stabilized for overhead and concealed lines.',
-    created_at: '2026-10-14T09:55:00.000Z',
-  },
-  {
-    id: 'a1b2c3d4-1003-4000-8000-000000000003',
-    name: 'Jaquar Florentine Quarter Turn Brass Bib Tap',
-    category: 'Taps & Diverters',
-    sku: 'JAQ-FLOR-BIB-01',
-    stock: 18,
-    selling_price: 750,
-    purchase_price: 540,
-    reorder_level: 4,
-    brand: 'Jaquar',
-    unit: 'pc',
-    description:
-      'Solid forged brass quarter-turn ceramic cartridge bib cock with mirror chrome finish, foam-flow aerator, and wall flange.',
-    created_at: '2026-10-14T09:50:00.000Z',
-  },
-  {
-    id: 'a1b2c3d4-1004-4000-8000-000000000004',
-    name: 'Hindware Dual-Flush Concealed Cistern Flush Valve',
-    category: 'Sanitaryware & Flush',
-    sku: 'HIND-DF-FLUSH-02',
-    stock: 12,
-    selling_price: 1450,
-    purchase_price: 1100,
-    reorder_level: 3,
-    brand: 'Hindware',
-    unit: 'set',
-    description:
-      'Complete 3L/6L water-saving dual-flush internal syphon mechanism and anti-siphon fill valve assembly for commode cisterns.',
-    created_at: '2026-10-14T09:45:00.000Z',
-  },
-  {
-    id: 'a1b2c3d4-1005-4000-8000-000000000005',
-    name: 'Finolex SWR 110mm Heavy Duty 87.5° Bend with Door',
-    category: 'Pipes & Fittings',
-    sku: 'FIN-SWR-BND-110',
-    stock: 35,
-    selling_price: 195,
-    purchase_price: 135,
-    reorder_level: 8,
-    brand: 'Finolex',
-    unit: 'pc',
-    description:
-      'Ring-fit rubber-sealed 110mm Soil, Waste & Rainwater (SWR) inspection bend with threaded access cap for easy cleanout.',
-    created_at: '2026-10-14T09:40:00.000Z',
-  },
-  {
-    id: 'a1b2c3d4-1006-4000-8000-000000000006',
-    name: 'Zoloto Bronze Non-Return Check Valve 1 Inch',
-    category: 'Valves & Controls',
-    sku: 'ZOL-NRV-BRZ-100',
-    stock: 15,
-    selling_price: 920,
-    purchase_price: 710,
-    reorder_level: 3,
-    brand: 'Zoloto Valves',
-    unit: 'pc',
-    description:
-      'Heavy gunmetal/bronze horizontal swing non-return check valve (NRV) preventing backflow in booster and overhead tank lines.',
-    created_at: '2026-10-14T09:35:00.000Z',
-  },
-  {
-    id: 'a1b2c3d4-1007-4000-8000-000000000007',
-    name: 'Supreme Heavy Brass Mechanical Float Valve 1 Inch',
-    category: 'Tanks & Accessories',
-    sku: 'SUP-FLT-BRS-100',
-    stock: 20,
-    selling_price: 580,
-    purchase_price: 420,
-    reorder_level: 5,
-    brand: 'Supreme Industries',
-    unit: 'set',
-    description:
-      'Heavy-duty forged brass equilibrium ball float valve with high-density polyethylene float ball for overhead storage tanks.',
-    created_at: '2026-10-14T09:30:00.000Z',
-  },
-  {
-    id: 'a1b2c3d4-1008-4000-8000-000000000008',
-    name: 'SS 304 Braided Heavy Flexible Geyser Connection Pipe (18 Inch)',
-    category: 'Geysers & Heating',
-    sku: 'SS-GEY-FLX-018',
-    stock: 50,
-    selling_price: 220,
-    purchase_price: 140,
-    reorder_level: 10,
-    brand: 'Supreme / Jaquar Spec',
-    unit: 'pc',
-    description:
-      'Corrosion-resistant AISI 304 stainless-steel wire-braided hose with inner EPDM high-temperature core and brass hex nuts.',
-    created_at: '2026-10-14T09:25:00.000Z',
-  },
-  {
-    id: 'a1b2c3d4-1009-4000-8000-000000000009',
-    name: 'Jaquar Overhead Rain Shower Head 8 Inch with Arm',
-    category: 'Taps & Diverters',
-    sku: 'JAQ-SHW-RAIN-08',
-    stock: 10,
-    selling_price: 1650,
-    purchase_price: 1250,
-    reorder_level: 2,
-    brand: 'Jaquar',
-    unit: 'set',
-    description:
-      'Ultra-slim 200mm stainless steel rain shower head with anti-limescale rub-clean silicone nozzles and 450mm brass wall arm.',
-    created_at: '2026-10-14T09:20:00.000Z',
-  },
-  {
-    id: 'a1b2c3d4-1010-4000-8000-000000000010',
-    name: 'Heavy Brass Bottle Trap 32mm for Wash Basin',
-    category: 'Sanitaryware & Flush',
-    sku: 'BRS-BTL-TRP-032',
-    stock: 16,
-    selling_price: 890,
-    purchase_price: 630,
-    reorder_level: 4,
-    brand: 'Jaquar / Cera Spec',
-    unit: 'pc',
-    description:
-      'Anti-odor liquid seal heavy chrome-plated brass bottle trap with removable bottom cleanout cup and wall discharge pipe.',
-    created_at: '2026-10-14T09:15:00.000Z',
-  },
-  {
-    id: 'a1b2c3d4-1011-4000-8000-000000000011',
-    name: 'Astral CPVC Solvent Weld Cement Heavy Duty (250ml Tin)',
-    category: 'Pipes & Fittings',
-    sku: 'AST-SOL-CMT-250',
-    stock: 30,
-    selling_price: 180,
-    purchase_price: 125,
-    reorder_level: 6,
-    brand: 'Astral Adhesives',
-    unit: '250ml tin',
-    description:
-      'ASTM F-493 certified heavy-body yellow CPVC solvent cement with integrated applicator dauber for leak-proof pressure fusion.',
-    created_at: '2026-10-14T09:10:00.000Z',
-  },
-  {
-    id: 'a1b2c3d4-1012-4000-8000-000000000012',
-    name: 'Multi-function Thermal Geyser Safety Relief Valve 1/2 Inch',
-    category: 'Geysers & Heating',
-    sku: 'GEY-SRV-BRS-050',
-    stock: 22,
-    selling_price: 340,
-    purchase_price: 230,
-    reorder_level: 5,
-    brand: 'Racold / Bajaj Spec',
-    unit: 'pc',
-    description:
-      'Calibrated 8-bar brass pressure-and-vacuum safety release valve with manual drain lever for storage electric water heaters.',
-    created_at: '2026-10-14T09:05:00.000Z',
-  },
-];
+export function clearSparePartsCache(): void {
+  sparePartsCache = null;
+}
 
 /**
- * Fetch spare parts directly from the live Supabase `public.spare_parts` table.
- * When live rows are returned (either via public SELECT RLS policy or an authenticated
- * Admin Panel browser session), those exact database rows are returned.
- * If 0 rows are returned because `public.spare_parts` RLS currently restricts `anon`
- * visitors, falls back to the verified Sohan Pipelines warehouse inventory (`WAREHOUSE_CATALOG_SPARE_PARTS`)
- * so that Spare Parts are always visible to customers while flagging `rlsBlocked: true` for Admin sync.
+ * Fetch spare parts directly from the live Supabase `public.spare_parts` table
+ * along with its existing `suppliers` foreign-key relationship and `image_path` column.
+ * Never invents product data and immediately reflects Admin Panel additions, edits,
+ * image replacements, and removals.
  */
 export async function fetchLiveSpareParts(
-  options: { forceRefresh?: boolean; includeWarehouseFallback?: boolean } = {}
+  options: { forceRefresh?: boolean } = {}
 ): Promise<{
   data: DbSparePart[];
   error: string | null;
   rlsBlocked?: boolean;
   isLiveDb?: boolean;
 }> {
-  const { forceRefresh = false, includeWarehouseFallback = true } = options;
+  const { forceRefresh = false } = options;
 
   if (
     !forceRefresh &&
@@ -551,16 +677,16 @@ export async function fetchLiveSpareParts(
     try {
       const { data, error } = await supabase
         .from('spare_parts')
-        .select('*')
+        .select(
+          'id, name, category, sku, stock, selling_price, purchase_price, reorder_level, supplier_id, image_path, created_at, suppliers(id, name)'
+        )
         .order('created_at', { ascending: false });
 
       if (error) {
         return {
-          data:
-            sparePartsCache?.data ??
-            (includeWarehouseFallback ? WAREHOUSE_CATALOG_SPARE_PARTS : []),
-          error: null,
-          rlsBlocked: true,
+          data: sparePartsCache?.data ?? [],
+          error: error.message,
+          rlsBlocked: false,
           isLiveDb: false,
         };
       }
@@ -592,24 +718,27 @@ export async function fetchLiveSpareParts(
         };
       }
 
-      // If 0 rows were returned without an error, check if the caller is currently anonymous (`anon`)
-      // while RLS on `public.spare_parts` restricts SELECT to `authenticated` (Admin Panel) only.
+      // Clear any stale cache if the last product was removed in the Admin Panel
+      sparePartsCache = null;
+
+      // Check if 0 rows were returned while the caller is anonymous (`anon`)
       const { data: sessionData } = await supabase.auth.getSession();
       const isAnon = !sessionData?.session;
 
       return {
-        data: includeWarehouseFallback ? WAREHOUSE_CATALOG_SPARE_PARTS : [],
+        data: [],
         error: null,
         rlsBlocked: isAnon,
-        isLiveDb: false,
+        isLiveDb: true,
       };
-    } catch {
+    } catch (err) {
       return {
-        data:
-          sparePartsCache?.data ??
-          (includeWarehouseFallback ? WAREHOUSE_CATALOG_SPARE_PARTS : []),
-        error: null,
-        rlsBlocked: true,
+        data: sparePartsCache?.data ?? [],
+        error:
+          err instanceof Error
+            ? err.message
+            : 'Failed to connect to Supabase spare_parts table',
+        rlsBlocked: false,
         isLiveDb: false,
       };
     } finally {
@@ -619,3 +748,4 @@ export async function fetchLiveSpareParts(
 
   return inflightSparePartsPromise;
 }
+

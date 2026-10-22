@@ -10,7 +10,7 @@ export interface CartItem {
   category?: string | null;
   selling_price: number | null;
   stock: number | null;
-  image_url: string;
+  image_url: string | null;
   quantity: number;
 }
 
@@ -108,7 +108,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         product.stock <= 0
       ) {
         toast.error('Item is currently out of stock', {
-          description: `${product.name} is currently unavailable for order.`,
+          description: `${product.name} is currently unavailable for enquiry.`,
         });
         return false;
       }
@@ -129,12 +129,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               description: `Quantity for "${product.name}" capped at maximum available stock.`,
             });
             const updated = [...prevItems];
-            updated[existingIndex] = { ...current, quantity: product.stock };
+            updated[existingIndex] = {
+              ...current,
+              ...product,
+              quantity: product.stock,
+            };
             return updated;
           }
 
           const updated = [...prevItems];
-          updated[existingIndex] = { ...current, quantity: newQty };
+          updated[existingIndex] = {
+            ...current,
+            ...product,
+            quantity: newQty,
+          };
           return updated;
         }
 

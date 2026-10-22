@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import {
@@ -20,65 +19,63 @@ import {
   Truck,
   Check,
   X,
-  Copy,
-  KeyRound,
   LogOut,
-  Database,
+  Upload,
+  Eye,
+  Pencil,
+  Trash2,
+  ImagePlus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { CustomSelect, type SelectOption } from '@/components/ui/custom-select';
+import { SparePartImage } from '@/components/spare-part-image';
 import { businessInfo } from '@/lib/business-info';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import {
   fetchLiveSpareParts,
   getCachedSpareParts,
-  WAREHOUSE_CATALOG_SPARE_PARTS,
+  clearSparePartsCache,
   type DbSparePart,
 } from '@/lib/supabase-data';
 import {
-  resolveProductImage,
-  SPARE_PARTS_STORAGE_ASSETS,
+  SPARE_PARTS_BUCKET_NAME,
+  getSparePartImageUrl,
+  uploadSparePartImageToBucket,
+  normalizeSparePartStoragePath,
 } from '@/lib/spare-parts-mapping';
 import { useCart } from '@/lib/cart-context';
 import { luxuryEasing } from '@/lib/motion';
 
-type SortOption = 'default' | 'price-asc' | 'price-desc' | 'stock-desc' | 'name-asc';
-
-const PUBLIC_RLS_SQL_SNIPPET = `ALTER TABLE public.spare_parts ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Allow public read-only access on spare_parts" ON public.spare_parts;
-
-CREATE POLICY "Allow public read-only access on spare_parts"
-  ON public.spare_parts
-  FOR SELECT
-  TO anon, authenticated
-  USING (true);
-
-GRANT SELECT ON public.spare_parts TO anon, authenticated;`;
+type SortOption =
+  | 'default'
+  | 'price-asc'
+  | 'price-desc'
+  | 'stock-desc'
+  | 'name-asc';
 
 const sortOptions: SelectOption[] = [
   {
     value: 'default',
     label: 'Default Order',
-    description: 'Latest warehouse additions first',
+    description: 'Latest Admin Panel additions first',
   },
   {
     value: 'price-asc',
     label: 'Price: Low to High',
-    description: 'Most economical fittings first',
+    description: 'Lowest selling price first',
   },
   {
     value: 'price-desc',
     label: 'Price: High to Low',
-    description: 'Heavy-duty & premium assemblies first',
+    description: 'Highest selling price first',
   },
   {
     value: 'stock-desc',
     label: 'Highest Stock',
-    description: 'Ready for bulk warehouse dispatch',
+    description: 'Most available units first',
   },
   {
     value: 'name-asc',
@@ -87,7 +84,7 @@ const sortOptions: SelectOption[] = [
   },
 ];
 
-const categoryFilters = [
+const defaultCategoryFilters = [
   { id: 'all', label: 'All Hardware' },
   { id: 'pipes', label: 'Pipes & Fittings' },
   { id: 'valves', label: 'Valves & Controls' },
@@ -97,87 +94,77 @@ const categoryFilters = [
   { id: 'tanks', label: 'Tanks & Accessories' },
 ];
 
-const warehouseHardwareLines = [
-  {
-    title: 'Heavy CPVC & UPVC Pipeline Systems',
-    brands: 'Astral, Supreme, Finolex',
-    desc: 'Pressure-rated schedule 40/80 pipes, brass-threaded elbows, tees, unions, SWR bends, and heavy solvent weld cements.',
-    image: SPARE_PARTS_STORAGE_ASSETS.PIPES_AND_FITTINGS,
-    tag: 'Pipes & Fittings',
-  },
-  {
-    title: 'Valves, Regulators & Stop Cocks',
-    brands: 'Zoloto, Astral, Jaquar',
-    desc: 'Full-bore brass ball valves, concealed stop cocks, non-return check valves, angle valves, and heavy gate valves.',
-    image: SPARE_PARTS_STORAGE_ASSETS.TAPS_AND_VALVES,
-    tag: 'Valves & Controls',
-  },
-  {
-    title: 'Bathroom Sanitaryware & Flush Units',
-    brands: 'Hindware, Parryware, Jaquar',
-    desc: 'Dual-flush mechanisms, wall-hung brackets, commode fittings, waste couplings, and heavy brass bottle traps.',
-    image: SPARE_PARTS_STORAGE_ASSETS.SANITARYWARE_AND_FLUSH,
-    tag: 'Sanitaryware & Flush',
-  },
-  {
-    title: 'Designer Taps, Faucets & Diverters',
-    brands: 'Jaquar, Cera, Essco',
-    desc: 'Quarter-turn ceramic disc bib taps, pillar taps, sink mixers, single-lever shower diverters, and rain shower heads.',
-    image: SPARE_PARTS_STORAGE_ASSETS.SHOWER_AND_MIXERS,
-    tag: 'Taps & Diverters',
-  },
-  {
-    title: 'Thermal Lines & Water Heater Kits',
-    brands: 'Racold, Bajaj, Supreme',
-    desc: 'SS 304 braided flexible connection pipes, multi-function thermal safety relief valves, and hot-water compliant lines.',
-    image: SPARE_PARTS_STORAGE_ASSETS.WATER_HEATERS_AND_HOT_WATER,
-    tag: 'Geysers & Heating',
-  },
-  {
-    title: 'Wash Basin Faucets & Tank Fittings',
-    brands: 'Supreme, Jaquar, Kirloskar',
-    desc: 'Mechanical brass float valves, tank nipples, basin pillar cocks, motorized foot valves, and suction lines.',
-    image: SPARE_PARTS_STORAGE_ASSETS.BASINS_AND_FAUCETS,
-    tag: 'Tanks & Basins',
-  },
-];
+function getSupplierName(part: DbSparePart): string | null {
+  if (!part.suppliers) return null;
+  if (Array.isArray(part.suppliers)) {
+    return part.suppliers[0]?.name || null;
+  }
+  return part.suppliers.name || null;
+}
 
 interface SparePartsSectionProps {
   initialParts?: DbSparePart[];
 }
 
 export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
-  const hasInitialParts = Array.isArray(initialParts) && initialParts.length > 0;
+  const hasInitialParts =
+    Array.isArray(initialParts) && initialParts.length > 0;
 
   const [parts, setParts] = React.useState<DbSparePart[]>(
-    () =>
-      getCachedSpareParts() ??
-      (hasInitialParts ? initialParts : WAREHOUSE_CATALOG_SPARE_PARTS)
+    () => getCachedSpareParts() ?? (hasInitialParts ? initialParts : [])
   );
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = React.useState(
+    () => !getCachedSpareParts() && !hasInitialParts
+  );
   const [error, setError] = React.useState<string | null>(null);
-  const [rlsBlocked, setRlsBlocked] = React.useState<boolean>(false);
-  const [showAdminSyncPanel, setShowAdminSyncPanel] = React.useState<boolean>(false);
 
-  // Admin session sync state (for viewing RLS-protected rows added in Admin Panel)
-  const [adminEmail, setAdminEmail] = React.useState('');
-  const [adminPassword, setAdminPassword] = React.useState('');
-  const [signingIn, setSigningIn] = React.useState(false);
-  const [activeUserEmail, setActiveUserEmail] = React.useState<string | null>(null);
-  const [copiedSql, setCopiedSql] = React.useState(false);
+  // Admin session & upload/edit modal state
+  const [activeUserEmail, setActiveUserEmail] = React.useState<string | null>(
+    null
+  );
+
+  // Admin Product Form state (saves image to "Spare Parts" bucket and image_path to public.spare_parts)
+  const [showAdminProductModal, setShowAdminProductModal] =
+    React.useState(false);
+  const [editingPart, setEditingPart] = React.useState<DbSparePart | null>(
+    null
+  );
+  const [formName, setFormName] = React.useState('');
+  const [formCategory, setFormCategory] = React.useState('Pipes & Fittings');
+  const [formSku, setFormSku] = React.useState('');
+  const [formSellingPrice, setFormSellingPrice] = React.useState('');
+  const [formPurchasePrice, setFormPurchasePrice] = React.useState('');
+  const [formStock, setFormStock] = React.useState('10');
+  const [formReorderLevel, setFormReorderLevel] = React.useState('5');
+  const [formImageFile, setFormImageFile] = React.useState<File | null>(null);
+  const [formImagePath, setFormImagePath] = React.useState('');
+  const [savingProduct, setSavingProduct] = React.useState(false);
+
+  // Product Details Modal state (derived from ID so live updates/removals stay synced automatically)
+  const [selectedDetailPartId, setSelectedDetailPartId] = React.useState<
+    string | null
+  >(null);
+
+  const selectedDetailPart = React.useMemo(
+    () =>
+      selectedDetailPartId
+        ? parts.find((p) => p.id === selectedDetailPartId) ?? null
+        : null,
+    [parts, selectedDetailPartId]
+  );
 
   const [searchQuery, setSearchQuery] = React.useState('');
   const [selectedCategory, setSelectedCategory] = React.useState('all');
   const [sortBy, setSortBy] = React.useState<SortOption>('default');
 
-  // Support deep linking via ?category=pipes|valves|taps|sanitary|heaters|tanks and ?q=...
+  // Support deep linking via ?category=... and ?q=...
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     const catParam = params.get('category')?.toLowerCase();
     const qParam = params.get('q');
     queueMicrotask(() => {
-      if (catParam && categoryFilters.some((c) => c.id === catParam)) {
+      if (catParam) {
         setSelectedCategory(catParam);
       }
       if (qParam) {
@@ -187,9 +174,17 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
   }, []);
 
   // Quantities for cards before adding to cart (product.id -> quantity)
-  const [cardQuantities, setCardQuantities] = React.useState<Record<string, number>>({});
+  const [cardQuantities, setCardQuantities] = React.useState<
+    Record<string, number>
+  >({});
 
-  const { items: cartItems, addItem, openCart, totalItemsCount, subtotal } = useCart();
+  const {
+    items: cartItems,
+    addItem,
+    openCart,
+    totalItemsCount,
+    subtotal,
+  } = useCart();
 
   // Map product ID -> quantity currently in cart
   const cartQtyById = React.useMemo(() => {
@@ -208,21 +203,23 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
   const loadParts = React.useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
     setError(null);
-    const { data, error: err, rlsBlocked: isRlsBlocked } = await fetchLiveSpareParts({
+    clearSparePartsCache();
+    const {
+      data,
+      error: err,
+    } = await fetchLiveSpareParts({
       forceRefresh: true,
     });
     if (err) {
       setError(err);
-      setParts(WAREHOUSE_CATALOG_SPARE_PARTS);
-      setRlsBlocked(false);
+      setParts([]);
     } else {
-      setParts(data.length > 0 ? data : WAREHOUSE_CATALOG_SPARE_PARTS);
-      setRlsBlocked(Boolean(isRlsBlocked));
+      setParts(data);
     }
     setLoading(false);
   }, []);
 
-  // Check active Supabase session & subscribe to live `public.spare_parts` changes
+  // Check active Supabase session, subscribe to live `public.spare_parts` changes, and refresh on window focus
   React.useEffect(() => {
     let active = true;
 
@@ -232,14 +229,13 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
     });
 
     fetchLiveSpareParts({ forceRefresh: true }).then(
-      ({ data, error: err, rlsBlocked: isRlsBlocked }) => {
+      ({ data, error: err }) => {
         if (!active) return;
         if (err) {
           setError(err);
-          setParts(WAREHOUSE_CATALOG_SPARE_PARTS);
+          setParts([]);
         } else {
-          setParts(data.length > 0 ? data : WAREHOUSE_CATALOG_SPARE_PARTS);
-          setRlsBlocked(Boolean(isRlsBlocked));
+          setParts(data);
         }
         setLoading(false);
       }
@@ -258,33 +254,54 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
       )
       .subscribe();
 
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === 'visible' && active) {
+        loadParts(false);
+      }
+    };
+
+    window.addEventListener('focus', handleVisibilityOrFocus);
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+
     return () => {
       active = false;
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
       supabase.removeChannel(channel);
     };
   }, [loadParts]);
 
-  const handleAdminSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!adminEmail.trim() || !adminPassword) return;
-    setSigningIn(true);
-    try {
-      const { data, error: signInErr } = await supabase.auth.signInWithPassword({
-        email: adminEmail.trim(),
-        password: adminPassword,
-      });
-      if (signInErr) {
-        toast.error(signInErr.message || 'Unable to sign in with Admin credentials');
-      } else {
-        setActiveUserEmail(data.user?.email ?? null);
-        setAdminPassword('');
-        toast.success('Admin session connected! Fetching live spare parts...');
-        await loadParts(true);
+  // Build category tabs combining standard plumbing categories + any custom database categories
+  const categoryFilters = React.useMemo(() => {
+    const base = [...defaultCategoryFilters];
+    const knownLabels = new Set(base.map((b) => b.label.toLowerCase()));
+    const knownIds = new Set(base.map((b) => b.id.toLowerCase()));
+
+    for (const part of parts) {
+      const cat = part.category?.trim();
+      if (!cat) continue;
+      const catLower = cat.toLowerCase();
+      const matchesBuiltIn =
+        knownLabels.has(catLower) ||
+        knownIds.has(catLower) ||
+        catLower.includes('pipe') ||
+        catLower.includes('fitting') ||
+        catLower.includes('valve') ||
+        catLower.includes('tap') ||
+        catLower.includes('diverter') ||
+        catLower.includes('sanitary') ||
+        catLower.includes('flush') ||
+        catLower.includes('geyser') ||
+        catLower.includes('heat') ||
+        catLower.includes('tank');
+
+      if (!matchesBuiltIn) {
+        knownLabels.add(catLower);
+        base.push({ id: `exact:${catLower}`, label: cat });
       }
-    } finally {
-      setSigningIn(false);
     }
-  };
+    return base;
+  }, [parts]);
 
   const handleAdminSignOut = async () => {
     await supabase.auth.signOut();
@@ -293,15 +310,149 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
     await loadParts(true);
   };
 
-  const handleCopySql = async () => {
-    try {
-      await navigator.clipboard.writeText(PUBLIC_RLS_SQL_SNIPPET);
-      setCopiedSql(true);
-      toast.success('Public RLS SQL policy copied to clipboard!');
-      setTimeout(() => setCopiedSql(false), 2500);
-    } catch {
-      toast.error('Unable to copy automatically — please select and copy the SQL snippet.');
+  const openAddPartModal = () => {
+    setEditingPart(null);
+    setFormName('');
+    setFormCategory('Pipes & Fittings');
+    setFormSku('');
+    setFormSellingPrice('');
+    setFormPurchasePrice('');
+    setFormStock('10');
+    setFormReorderLevel('5');
+    setFormImageFile(null);
+    setFormImagePath('');
+    setShowAdminProductModal(true);
+  };
+
+  const openEditPartModal = (part: DbSparePart) => {
+    setEditingPart(part);
+    setFormName(part.name || '');
+    setFormCategory(part.category || 'Pipes & Fittings');
+    setFormSku(part.sku || '');
+    setFormSellingPrice(
+      part.selling_price !== null && part.selling_price !== undefined
+        ? String(part.selling_price)
+        : ''
+    );
+    setFormPurchasePrice(
+      part.purchase_price !== null && part.purchase_price !== undefined
+        ? String(part.purchase_price)
+        : ''
+    );
+    setFormStock(
+      part.stock !== null && part.stock !== undefined ? String(part.stock) : '0'
+    );
+    setFormReorderLevel(
+      part.reorder_level !== null && part.reorder_level !== undefined
+        ? String(part.reorder_level)
+        : '5'
+    );
+    setFormImageFile(null);
+    setFormImagePath(part.image_path || '');
+    setShowAdminProductModal(true);
+  };
+
+  const handleSaveAdminProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formName.trim()) {
+      toast.error('Product name is required');
+      return;
     }
+
+    setSavingProduct(true);
+    try {
+      let finalImagePath: string | null = formImagePath.trim()
+        ? normalizeSparePartStoragePath(formImagePath.trim()) ||
+          formImagePath.trim()
+        : null;
+
+      // 1. If administrator selected an image file, upload it to the existing "Spare Parts" bucket
+      if (formImageFile) {
+        const uploadRes = await uploadSparePartImageToBucket(
+          formImageFile,
+          formSku.trim() || formName.trim()
+        );
+        if (uploadRes.error || !uploadRes.imagePath) {
+          toast.error(
+            uploadRes.error ||
+              `Failed to upload image to "${SPARE_PARTS_BUCKET_NAME}" bucket`
+          );
+          setSavingProduct(false);
+          return;
+        }
+        finalImagePath = uploadRes.imagePath;
+      }
+
+      const payload = {
+        name: formName.trim(),
+        category: formCategory.trim() || null,
+        sku: formSku.trim() || null,
+        selling_price: formSellingPrice !== '' ? Number(formSellingPrice) : 0,
+        purchase_price:
+          formPurchasePrice !== '' ? Number(formPurchasePrice) : null,
+        stock: formStock !== '' ? Number(formStock) : 0,
+        reorder_level:
+          formReorderLevel !== '' ? Number(formReorderLevel) : 5,
+        image_path: finalImagePath,
+      };
+
+      if (editingPart) {
+        const { error: updateErr } = await supabase
+          .from('spare_parts')
+          .update(payload)
+          .eq('id', editingPart.id);
+
+        if (updateErr) {
+          toast.error(`Failed to update spare part: ${updateErr.message}`);
+          return;
+        }
+        toast.success(`Updated "${payload.name}" in catalog`);
+      } else {
+        const { error: insertErr } = await supabase
+          .from('spare_parts')
+          .insert(payload);
+
+        if (insertErr) {
+          toast.error(`Failed to add spare part: ${insertErr.message}`);
+          return;
+        }
+        toast.success(
+          `Added "${payload.name}" to spare parts catalog`
+        );
+      }
+
+      setShowAdminProductModal(false);
+      await loadParts(false);
+    } finally {
+      setSavingProduct(false);
+    }
+  };
+
+  const handleDeleteAdminProduct = async (part: DbSparePart) => {
+    const { error: delErr } = await supabase
+      .from('spare_parts')
+      .delete()
+      .eq('id', part.id);
+
+    if (delErr) {
+      toast.error(`Unable to remove spare part: ${delErr.message}`);
+      return;
+    }
+
+    if (part.image_path) {
+      const cleanPath = normalizeSparePartStoragePath(part.image_path);
+      if (cleanPath) {
+        await supabase.storage
+          .from(SPARE_PARTS_BUCKET_NAME)
+          .remove([cleanPath]);
+      }
+    }
+
+    toast.success(`Removed "${part.name}" from inventory`);
+    if (selectedDetailPart?.id === part.id) {
+      setSelectedDetailPartId(null);
+    }
+    await loadParts(false);
   };
 
   const getCardQuantity = (id: string) => cardQuantities[id] ?? 1;
@@ -324,7 +475,7 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
 
   const handleAddToCart = (part: DbSparePart) => {
     const qty = getCardQuantity(part.id);
-    const resolvedImage = resolveProductImage(part);
+    const resolvedImage = getSparePartImageUrl(part);
     addItem(
       {
         id: part.id,
@@ -360,17 +511,25 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
   const filteredAndSortedParts = React.useMemo(() => {
     let result = parts.filter((part) => {
       const q = searchQuery.trim().toLowerCase();
+      const supplierName = getSupplierName(part);
       const matchesSearch =
         !q ||
         part.name.toLowerCase().includes(q) ||
         (part.category && part.category.toLowerCase().includes(q)) ||
         (part.sku && part.sku.toLowerCase().includes(q)) ||
+        (supplierName && supplierName.toLowerCase().includes(q)) ||
         (part.description && part.description.toLowerCase().includes(q));
 
       if (!matchesSearch) return false;
       if (selectedCategory === 'all') return true;
 
-      const catLower = `${part.category || ''} ${part.name || ''}`.toLowerCase();
+      if (selectedCategory.startsWith('exact:')) {
+        const target = selectedCategory.slice(6);
+        return (part.category || '').trim().toLowerCase() === target;
+      }
+
+      const catLower =
+        `${part.category || ''} ${part.name || ''}`.toLowerCase();
       if (selectedCategory === 'pipes') {
         return (
           catLower.includes('pipe') ||
@@ -475,35 +634,42 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
           <div className="flex items-center gap-2.5">
             <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span className="font-semibold text-foreground truncate">
-              Verified Database Rates
+              Authorized Counter Rates
             </span>
           </div>
           <div className="flex items-center gap-2.5">
             <MessageCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span className="font-semibold text-foreground truncate">
-              Direct WhatsApp Checkout
+              Direct WhatsApp Enquiry
             </span>
           </div>
         </div>
 
-        {/* Active Admin Session Banner (when authenticated) */}
+        {/* Active Counter Manager Session Banner (when authenticated) */}
         {activeUserEmail && (
-          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs">
-            <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 font-medium">
-              <Database className="h-4 w-4 shrink-0" />
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs">
+            <div className="flex items-center gap-2.5 text-emerald-700 dark:text-emerald-300 font-medium">
+              <ShieldCheck className="h-4 w-4 shrink-0" />
               <span>
-                Connected to Supabase Admin Session ({activeUserEmail}) · Showing{' '}
-                <strong className="font-mono">{parts.length}</strong> live spare
-                parts
+                Inventory Manager ({activeUserEmail}) · {parts.length} catalog items active
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                onClick={openAddPartModal}
+                className="h-8 px-3 text-xs font-semibold rounded-xl gap-1.5"
+              >
+                <ImagePlus className="h-3.5 w-3.5" />
+                Add Spare Part &amp; Upload Image
+              </Button>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => loadParts(true)}
-                className="h-7 px-2.5 text-[11px]"
+                className="h-8 px-2.5 text-xs rounded-xl"
               >
                 <RefreshCw className="mr-1 h-3 w-3" />
                 Sync Now
@@ -513,121 +679,12 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                 variant="ghost"
                 size="sm"
                 onClick={handleAdminSignOut}
-                className="h-7 px-2.5 text-[11px] text-muted-foreground hover:text-foreground"
+                className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground rounded-xl"
               >
                 <LogOut className="mr-1 h-3 w-3" />
                 Sign Out
               </Button>
             </div>
-          </div>
-        )}
-
-        {/* Admin Panel Custom Rows Sync Notice (when anon is restricted by Supabase RLS) */}
-        {!activeUserEmail && rlsBlocked && (
-          <div className="rounded-2xl border border-primary/25 bg-card/90 p-3.5 sm:px-5 space-y-4 shadow-crisp-xs">
-            <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2.5 text-muted-foreground">
-                <Database className="h-4 w-4 text-primary shrink-0" />
-                <span>
-                  Showing <strong className="text-foreground font-mono">{parts.length}</strong> verified warehouse spare parts. Added custom items in your Admin Panel?
-                </span>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAdminSyncPanel((prev) => !prev)}
-                className="h-8 px-3 text-xs font-semibold rounded-xl border-primary/30 text-primary hover:bg-primary/10"
-              >
-                <KeyRound className="mr-1.5 h-3.5 w-3.5" />
-                {showAdminSyncPanel ? 'Hide Admin Sync' : 'Sync Admin Panel / RLS'}
-              </Button>
-            </div>
-
-            {showAdminSyncPanel && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-2 border-t border-border/70">
-                <form
-                  onSubmit={handleAdminSignIn}
-                  className="rounded-xl border border-border/80 bg-muted/25 p-4 space-y-3"
-                >
-                  <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
-                    <KeyRound className="h-3.5 w-3.5 text-primary" />
-                    <span>Option 1: Sign In with Admin Panel Credentials</span>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Authenticate this browser with your Supabase Admin Panel email &amp; password to load RLS-protected <code className="font-mono">spare_parts</code> rows immediately.
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    <Input
-                      type="email"
-                      placeholder="Admin email"
-                      value={adminEmail}
-                      onChange={(e) => setAdminEmail(e.target.value)}
-                      className="h-9 text-xs bg-background"
-                      required
-                    />
-                    <Input
-                      type="password"
-                      placeholder="Admin password"
-                      value={adminPassword}
-                      onChange={(e) => setAdminPassword(e.target.value)}
-                      className="h-9 text-xs bg-background"
-                      required
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="submit"
-                      disabled={signingIn}
-                      size="sm"
-                      className="text-xs font-semibold rounded-lg h-8.5 px-3.5"
-                    >
-                      {signingIn ? 'Connecting...' : 'Connect Admin Session'}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => loadParts(true)}
-                      className="text-xs rounded-lg h-8.5"
-                    >
-                      <RefreshCw className="mr-1 h-3 w-3" />
-                      Re-Check
-                    </Button>
-                  </div>
-                </form>
-
-                <div className="rounded-xl border border-border/80 bg-muted/25 p-4 space-y-2.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-semibold text-foreground">
-                      Option 2: Enable Public Read Policy in Supabase SQL Editor
-                    </span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCopySql}
-                      className="h-7.5 px-2.5 text-[11px] font-semibold rounded-lg gap-1"
-                    >
-                      {copiedSql ? (
-                        <>
-                          <Check className="h-3 w-3 text-emerald-500" />
-                          <span>Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="h-3 w-3 text-primary" />
-                          <span>Copy SQL</span>
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                  <pre className="p-2.5 rounded-lg bg-slate-950 text-slate-200 font-mono text-[10px] overflow-x-auto leading-relaxed border border-slate-800">
-                    {PUBLIC_RLS_SQL_SNIPPET}
-                  </pre>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -662,7 +719,7 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Search name, SKU, fitting..."
+                  placeholder="Search name, SKU, category..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9 pr-8 h-9.5 text-xs rounded-xl bg-card border-border/80"
@@ -702,7 +759,9 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                   aria-label="Refresh live inventory"
                   className="h-9.5 px-3 rounded-xl text-xs font-semibold shrink-0"
                 >
-                  <RefreshCw className={cn('h-3.5 w-3.5', loading && 'animate-spin')} />
+                  <RefreshCw
+                    className={cn('h-3.5 w-3.5', loading && 'animate-spin')}
+                  />
                 </Button>
 
                 {/* Quick Cart Trigger in Control Bar */}
@@ -736,7 +795,7 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                 <strong className="text-foreground font-mono">
                   {parts.length}
                 </strong>{' '}
-                live inventory items
+                genuine plumbing spare parts
               </span>
               {(searchQuery ||
                 selectedCategory !== 'all' ||
@@ -765,7 +824,7 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                 key={idx}
                 className="rounded-2xl border border-border/70 bg-card overflow-hidden p-4 space-y-4 animate-pulse"
               >
-                <div className="h-44 w-full rounded-xl bg-muted/70" />
+                <div className="h-48 w-full rounded-xl bg-muted/70" />
                 <div className="space-y-2">
                   <div className="h-3.5 w-24 rounded bg-muted/70" />
                   <div className="h-5 w-3/4 rounded bg-muted/80" />
@@ -791,8 +850,8 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                 Unable to Load Live Spare Parts Inventory
               </h3>
               <p className="text-xs text-muted-foreground">
-                We encountered a temporary issue connecting to the inventory
-                database ({error}). You can retry or contact our parts desk on
+                We encountered a temporary issue loading the live spare parts
+                catalog. You can retry or contact our parts desk directly on
                 WhatsApp.
               </p>
             </div>
@@ -826,7 +885,7 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
           </div>
         )}
 
-        {/* Live Product Grid (When Database Has Matching Rows) */}
+        {/* Live Product Grid (Rendered from actual public.spare_parts records & "Spare Parts" Storage bucket) */}
         {!loading && !error && filteredAndSortedParts.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {filteredAndSortedParts.map((part, index) => {
@@ -839,9 +898,9 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                 part.stock !== null &&
                 part.stock !== undefined &&
                 part.stock <= (part.reorder_level || 5);
-              const imageSrc = resolveProductImage(part);
               const cardQty = getCardQuantity(part.id);
               const inCartQty = cartQtyById[part.id] || 0;
+              const supplierName = getSupplierName(part);
 
               return (
                 <motion.div
@@ -865,41 +924,57 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                     )}
                   >
                     <div>
-                      {/* Product Image Header */}
-                      <div className="relative h-48 w-full bg-slate-950/5 dark:bg-slate-950/40 overflow-hidden border-b border-border/60">
-                        <Image
-                          src={imageSrc}
-                          alt={part.name}
-                          fill
-                          className={cn(
-                            'object-cover transition-transform duration-500 group-hover:scale-105',
-                            isOutOfStock && 'grayscale-[40%]'
-                          )}
+                      {/* Product Image Header (From "Spare Parts" Bucket or Polished Fallback) */}
+                      <div
+                        onClick={() => setSelectedDetailPartId(part.id)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setSelectedDetailPartId(part.id);
+                          }
+                        }}
+                        className="relative h-48 w-full bg-slate-950/5 dark:bg-slate-950/40 overflow-hidden border-b border-border/60 cursor-pointer"
+                      >
+                        <SparePartImage
+                          name={part.name}
+                          category={part.category}
+                          imagePath={part.image_path}
+                          imageUrl={part.image_url}
+                          isOutOfStock={isOutOfStock}
+                          className="group-hover:scale-105"
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                          referrerPolicy="no-referrer"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-transparent to-slate-950/20" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-transparent to-slate-950/20 pointer-events-none" />
 
                         {/* Category & In-Cart Top Badges */}
-                        <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-1.5">
+                        <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-1.5 z-10">
                           <span className="px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-background/90 backdrop-blur-md text-foreground border border-border/70 shadow-2xs truncate max-w-[65%]">
                             {part.category || 'Plumbing Hardware'}
                           </span>
 
-                          {inCartQty > 0 && (
+                          {inCartQty > 0 ? (
                             <button
                               type="button"
-                              onClick={openCart}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openCart();
+                              }}
                               className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-600 text-white shadow-xs flex items-center gap-1 cursor-pointer hover:bg-emerald-700 transition-colors"
                             >
                               <Check className="h-2.5 w-2.5" />
                               <span>In Cart ({inCartQty})</span>
                             </button>
+                          ) : (
+                            <span className="p-1.5 rounded-lg bg-slate-950/60 text-white/85 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Eye className="h-3.5 w-3.5" />
+                            </span>
                           )}
                         </div>
 
-                        {/* Stock Status Badge Bottom-Right */}
-                        <div className="absolute bottom-2.5 right-3 left-3 flex items-center justify-between gap-2">
+                        {/* SKU & Stock Status Badge Bottom */}
+                        <div className="absolute bottom-2.5 right-3 left-3 flex items-center justify-between gap-2 z-10">
                           {part.sku ? (
                             <span className="text-[10px] font-mono text-white/90 bg-slate-950/70 backdrop-blur-xs px-2 py-0.5 rounded border border-white/15 truncate">
                               SKU: {part.sku}
@@ -922,7 +997,8 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                               ? 'Out of Stock'
                               : isLowStock
                               ? `Only ${part.stock} Left`
-                              : part.stock !== null && part.stock !== undefined
+                              : part.stock !== null &&
+                                part.stock !== undefined
                               ? `${part.stock} in Stock`
                               : 'In Stock'}
                           </span>
@@ -932,14 +1008,18 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                       {/* Product Info Body */}
                       <CardContent className="p-4 space-y-2.5">
                         <div>
-                          {part.brand && (
-                            <span className="text-[10px] font-semibold uppercase tracking-wider text-primary block mb-0.5">
-                              {part.brand}
+                          {(part.brand || supplierName) && (
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-primary block mb-0.5 truncate">
+                              {part.brand || supplierName}
                             </span>
                           )}
-                          <h3 className="font-display font-bold text-sm sm:text-base text-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedDetailPartId(part.id)}
+                            className="text-left font-display font-bold text-sm sm:text-base text-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors cursor-pointer"
+                          >
                             {part.name}
-                          </h3>
+                          </button>
                           {part.description && (
                             <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
                               {part.description}
@@ -951,7 +1031,7 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                         <div className="pt-2 border-t border-border/60 flex items-baseline justify-between gap-2">
                           <div>
                             <span className="text-[10px] text-muted-foreground block">
-                              Verified Counter Price
+                              Selling Price
                             </span>
                             {part.selling_price !== null &&
                             part.selling_price !== undefined &&
@@ -977,18 +1057,19 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                           </div>
 
                           <div className="text-right">
-                            <span className="text-[10px] text-muted-foreground block">
-                              Dispatch
-                            </span>
-                            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                              {isOutOfStock ? 'On Restock' : 'Ready Today'}
-                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedDetailPartId(part.id)}
+                              className="text-[11px] font-semibold text-primary hover:underline cursor-pointer"
+                            >
+                              View Details
+                            </button>
                           </div>
                         </div>
                       </CardContent>
                     </div>
 
-                    {/* Bottom Actions: Stepper + Add to Cart + Quick WhatsApp */}
+                    {/* Bottom Actions: Stepper + Add to Cart + Quick WhatsApp + Admin Quick Edit */}
                     <div className="p-4 pt-0 space-y-2">
                       <div className="flex items-center gap-2">
                         {!isOutOfStock && (
@@ -1032,7 +1113,7 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                         >
                           <ShoppingBag className="h-3.5 w-3.5" />
                           <span>
-                            {isOutOfStock ? 'Unavailable' : 'Add to Cart'}
+                            {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
                           </span>
                         </Button>
                       </div>
@@ -1052,6 +1133,32 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                           Quick WhatsApp Enquiry
                         </a>
                       </Button>
+
+                      {/* Admin Quick Edit / Delete Controls when Admin session is active */}
+                      {activeUserEmail && (
+                        <div className="pt-1.5 border-t border-border/50 flex items-center justify-between gap-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditPartModal(part)}
+                            className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                          >
+                            <Pencil className="mr-1 h-3 w-3" />
+                            Edit / Replace Image
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteAdminProduct(part)}
+                            className="h-7 px-2 text-[11px] text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="mr-1 h-3 w-3" />
+                            Remove
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </Card>
                 </motion.div>
@@ -1060,119 +1167,9 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
           </div>
         )}
 
-        {/* Empty / RLS Diagnostic State (When 0 rows are returned from public.spare_parts) */}
+        {/* Empty State (When 0 items match or catalog is being updated) */}
         {!loading && !error && filteredAndSortedParts.length === 0 && (
           <div className="space-y-8">
-            {/* If 0 items are in parts and caller is unauthenticated (`anon`), explain RLS & offer instant Admin Sync + 1-click SQL Policy */}
-            {parts.length === 0 && rlsBlocked && (
-              <div className="rounded-3xl border border-amber-500/40 bg-card p-6 sm:p-8 shadow-crisp-md space-y-6">
-                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 border-b border-border/70 pb-5">
-                  <div className="flex items-start gap-3.5">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-500 shrink-0 mt-0.5">
-                      <Database className="h-5 w-5" />
-                    </div>
-                    <div className="space-y-1">
-                      <h3 className="font-display font-bold text-base sm:text-lg text-foreground">
-                        Admin Panel Spare Parts Detected Behind Supabase RLS
-                      </h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl">
-                        Your <code className="font-mono text-foreground">public.spare_parts</code> table has Row Level Security (RLS) enabled for{' '}
-                        <code className="font-mono text-foreground">authenticated</code> Admin Panel users, which hides rows from anonymous (<code className="font-mono text-foreground">anon</code>) public visitors. Connect your Admin session below to view your parts immediately, or run the 1-click SQL policy in Supabase so all public customers can see them.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-                  {/* Option 1: Sign in with Admin Panel Credentials to View Immediately */}
-                  <form
-                    onSubmit={handleAdminSignIn}
-                    className="rounded-2xl border border-border/80 bg-muted/25 p-5 space-y-4"
-                  >
-                    <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
-                      <KeyRound className="h-4 w-4 text-primary" />
-                      <span>Option 1: Connect Admin Panel Session in Browser</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      Sign in with your Supabase Admin Panel email and password to authenticate this browser and load your <code className="font-mono">spare_parts</code> inventory immediately.
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <Input
-                        type="email"
-                        placeholder="Admin email address"
-                        value={adminEmail}
-                        onChange={(e) => setAdminEmail(e.target.value)}
-                        className="h-10 text-xs bg-background"
-                        required
-                      />
-                      <Input
-                        type="password"
-                        placeholder="Admin password"
-                        value={adminPassword}
-                        onChange={(e) => setAdminPassword(e.target.value)}
-                        className="h-10 text-xs bg-background"
-                        required
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="submit"
-                        disabled={signingIn}
-                        size="sm"
-                        className="text-xs font-semibold rounded-xl h-9 px-4"
-                      >
-                        {signingIn ? 'Connecting...' : 'Connect Admin & Load Parts'}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => loadParts(true)}
-                        className="text-xs rounded-xl h-9"
-                      >
-                        <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-                        Re-Check Table
-                      </Button>
-                    </div>
-                  </form>
-
-                  {/* Option 2: 1-Click Copy Public SELECT RLS Policy for All Visitors */}
-                  <div className="rounded-2xl border border-border/80 bg-muted/25 p-5 space-y-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-semibold text-foreground">
-                        Option 2: Enable Public Read Access in Supabase SQL Editor
-                      </span>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleCopySql}
-                        className="h-8 px-3 text-xs font-semibold rounded-lg gap-1.5"
-                      >
-                        {copiedSql ? (
-                          <>
-                            <Check className="h-3.5 w-3.5 text-emerald-500" />
-                            <span>Copied SQL</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="h-3.5 w-3.5 text-primary" />
-                            <span>Copy SQL Policy</span>
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Paste and run this once in your Supabase Dashboard → <strong>SQL Editor</strong> so every customer visiting your website can view your Admin Panel spare parts automatically:
-                    </p>
-                    <pre className="p-3 rounded-xl bg-slate-950 text-slate-200 font-mono text-[11px] overflow-x-auto leading-relaxed border border-slate-800">
-                      {PUBLIC_RLS_SQL_SNIPPET}
-                    </pre>
-                  </div>
-                </div>
-              </div>
-            )}
-
             <div className="rounded-3xl border border-border/80 bg-card p-6 sm:p-10 shadow-crisp-md text-center space-y-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary mx-auto">
                 <Package className="h-7 w-7" />
@@ -1181,12 +1178,12 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                 <h3 className="font-display font-bold text-lg text-foreground">
                   {searchQuery || selectedCategory !== 'all'
                     ? 'No Matching Spare Parts Found'
-                    : 'Physical Warehouse Desk & Real-Time Parts Synchronization'}
+                    : 'Direct Hardware Counter Supply'}
                 </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   {searchQuery || selectedCategory !== 'all'
                     ? 'Try adjusting your search terms or clearing category filters to find the plumbing hardware you need.'
-                    : 'SOHAN PIPELINES operates an authorized physical supply warehouse in Keshrambha, Dantan. You can enquire directly with our parts manager on WhatsApp for instant counter availability, trade quotes, and on-site delivery.'}
+                    : 'Enquire directly with our Midnapore & Dantan hardware counter for genuine CPVC/UPVC pipes, brass ball valves, diverters, and sanitary fittings.'}
                 </p>
               </div>
 
@@ -1201,6 +1198,15 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                     className="text-xs rounded-xl"
                   >
                     Reset Search &amp; Filters
+                  </Button>
+                ) : activeUserEmail ? (
+                  <Button
+                    onClick={openAddPartModal}
+                    size="sm"
+                    className="text-xs font-semibold rounded-xl gap-1.5"
+                  >
+                    <ImagePlus className="h-3.5 w-3.5" />
+                    Add First Spare Part
                   </Button>
                 ) : (
                   <Button
@@ -1242,82 +1248,410 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                 </Button>
               </div>
             </div>
-
-            {/* Warehouse Hardware Categories Showcase with Authentic Supabase Storage Assets */}
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <h4 className="font-display font-bold text-base sm:text-lg text-foreground">
-                    Authorized Hardware Lines &amp; Trade Brand Directory
-                  </h4>
-                  <p className="text-xs text-muted-foreground">
-                    Direct counter supply from our Keshrambha &amp; Dantan
-                    warehouse across Paschim and Purba Medinipur
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {warehouseHardwareLines.map((item) => (
-                  <Card
-                    key={item.title}
-                    className="rounded-2xl border border-border/80 bg-card overflow-hidden shadow-crisp-xs hover:border-primary/50 transition-all flex flex-col justify-between group"
-                  >
-                    <div>
-                      <div className="relative h-44 w-full bg-slate-950/5 overflow-hidden border-b border-border/60">
-                        <Image
-                          src={item.image}
-                          alt={item.title}
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                          referrerPolicy="no-referrer"
-                        />
-                        <div className="absolute top-2.5 left-2.5">
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-background/90 backdrop-blur-md text-foreground border border-border/70">
-                            {item.tag}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="p-4 space-y-2">
-                        <h5 className="font-display font-bold text-sm text-foreground">
-                          {item.title}
-                        </h5>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
-                          {item.desc}
-                        </p>
-                        <span className="text-[11px] text-primary font-semibold block pt-1">
-                          Authorized Brands: {item.brands}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="p-4 pt-0">
-                      <Button
-                        asChild
-                        variant="outline"
-                        size="sm"
-                        className="w-full text-xs font-semibold h-8.5 rounded-xl border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10"
-                      >
-                        <a
-                          href={`https://wa.me/${rawPhone}?text=${encodeURIComponent(
-                            `Hello Sohan Pipeline's, I would like to enquire about current stock and pricing for ${item.title} (${item.brands}).`
-                          )}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <MessageCircle className="mr-1.5 h-3.5 w-3.5" />
-                          Enquire Category on WhatsApp
-                        </a>
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
           </div>
         )}
       </div>
+
+      {/* Product Details Modal */}
+      <AnimatePresence>
+        {selectedDetailPart && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedDetailPartId(null)}
+              className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ duration: 0.22, ease: luxuryEasing }}
+              role="dialog"
+              aria-modal="true"
+              aria-label={selectedDetailPart.name}
+              className="relative z-10 w-full max-w-2xl rounded-3xl border border-border/80 bg-card shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2"
+            >
+              <div className="relative min-h-[260px] md:min-h-[360px] bg-slate-950/10 border-b md:border-b-0 md:border-r border-border/60">
+                <SparePartImage
+                  name={selectedDetailPart.name}
+                  category={selectedDetailPart.category}
+                  imagePath={selectedDetailPart.image_path}
+                  imageUrl={selectedDetailPart.image_url}
+                  isOutOfStock={
+                    selectedDetailPart.stock !== null &&
+                    selectedDetailPart.stock !== undefined &&
+                    selectedDetailPart.stock <= 0
+                  }
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+              </div>
+
+              <div className="p-6 flex flex-col justify-between space-y-5">
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
+                      {selectedDetailPart.category || 'Plumbing Hardware'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDetailPartId(null)}
+                      aria-label="Close product details"
+                      className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div>
+                    <h3 className="font-display font-bold text-lg sm:text-xl text-foreground leading-snug">
+                      {selectedDetailPart.name}
+                    </h3>
+                    {selectedDetailPart.sku && (
+                      <p className="text-xs font-mono text-muted-foreground mt-1">
+                        SKU: {selectedDetailPart.sku}
+                      </p>
+                    )}
+                    {getSupplierName(selectedDetailPart) && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Supplier: {getSupplierName(selectedDetailPart)}
+                      </p>
+                    )}
+                  </div>
+
+                  {selectedDetailPart.description && (
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                      {selectedDetailPart.description}
+                    </p>
+                  )}
+
+                  <div className="p-3.5 rounded-2xl bg-muted/30 border border-border/70 flex items-center justify-between gap-3">
+                    <div>
+                      <span className="text-[10px] text-muted-foreground block">
+                        Selling Price
+                      </span>
+                      {selectedDetailPart.selling_price !== null &&
+                      selectedDetailPart.selling_price !== undefined &&
+                      Number(selectedDetailPart.selling_price) > 0 ? (
+                        <span className="font-mono font-extrabold text-xl text-foreground">
+                          ₹
+                          {Number(
+                            selectedDetailPart.selling_price
+                          ).toLocaleString('en-IN')}
+                        </span>
+                      ) : (
+                        <span className="text-sm font-semibold text-primary">
+                          Price on Enquiry
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-[10px] text-muted-foreground block">
+                        Available Stock
+                      </span>
+                      <span
+                        className={cn(
+                          'text-xs font-bold',
+                          selectedDetailPart.stock !== null &&
+                            selectedDetailPart.stock !== undefined &&
+                            selectedDetailPart.stock <= 0
+                            ? 'text-destructive'
+                            : 'text-emerald-600 dark:text-emerald-400'
+                        )}
+                      >
+                        {selectedDetailPart.stock !== null &&
+                        selectedDetailPart.stock !== undefined
+                          ? selectedDetailPart.stock <= 0
+                            ? 'Out of Stock'
+                            : `${selectedDetailPart.stock} Units Available`
+                          : 'Available'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2.5 pt-2 border-t border-border/60">
+                  <div className="flex items-center gap-2.5">
+                    {!(
+                      selectedDetailPart.stock !== null &&
+                      selectedDetailPart.stock !== undefined &&
+                      selectedDetailPart.stock <= 0
+                    ) && (
+                      <div className="flex items-center rounded-xl border border-border/80 bg-muted/40 p-0.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleQuantityChange(
+                              selectedDetailPart.id,
+                              -1,
+                              selectedDetailPart.stock
+                            )
+                          }
+                          disabled={
+                            getCardQuantity(selectedDetailPart.id) <= 1
+                          }
+                          className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-30 cursor-pointer"
+                          aria-label="Decrease quantity"
+                        >
+                          <Minus className="h-3.5 w-3.5" />
+                        </button>
+                        <span className="w-8 text-center text-xs font-bold font-mono text-foreground">
+                          {getCardQuantity(selectedDetailPart.id)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleQuantityChange(
+                              selectedDetailPart.id,
+                              1,
+                              selectedDetailPart.stock
+                            )
+                          }
+                          disabled={
+                            selectedDetailPart.stock !== null &&
+                            selectedDetailPart.stock !== undefined &&
+                            getCardQuantity(selectedDetailPart.id) >=
+                              selectedDetailPart.stock
+                          }
+                          className="h-9 w-9 rounded-lg flex items-center justify-center hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-30 cursor-pointer"
+                          aria-label="Increase quantity"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
+
+                    <Button
+                      onClick={() => {
+                        handleAddToCart(selectedDetailPart);
+                        setSelectedDetailPartId(null);
+                      }}
+                      disabled={
+                        selectedDetailPart.stock !== null &&
+                        selectedDetailPart.stock !== undefined &&
+                        selectedDetailPart.stock <= 0
+                      }
+                      className="flex-1 h-10 rounded-xl font-semibold text-xs gap-1.5"
+                    >
+                      <ShoppingBag className="h-4 w-4" />
+                      <span>Add to Cart</span>
+                    </Button>
+                  </div>
+
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full h-9.5 rounded-xl text-xs font-semibold border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10"
+                  >
+                    <a
+                      href={getDirectWhatsAppUrl(selectedDetailPart)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <MessageCircle className="mr-1.5 h-3.5 w-3.5" />
+                      Enquire on WhatsApp
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Admin Add / Edit Spare Part & "Spare Parts" Bucket Upload Modal */}
+      <AnimatePresence>
+        {showAdminProductModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAdminProductModal(false)}
+              className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              role="dialog"
+              aria-modal="true"
+              aria-label={
+                editingPart ? 'Edit Spare Part' : 'Add New Spare Part'
+              }
+              className="relative z-10 w-full max-w-lg rounded-3xl border border-border/80 bg-card p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between border-b border-border/70 pb-3">
+                <div>
+                  <h3 className="font-display font-bold text-base sm:text-lg text-foreground">
+                    {editingPart
+                      ? 'Edit Spare Part & Image'
+                      : 'Add New Spare Part'}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Update spare part details, pricing, stock count, and product photo.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAdminProductModal(false)}
+                  className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveAdminProduct} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground block">
+                    Product Name *
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="e.g. Astral CPVC 1 Inch Ball Valve"
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                    className="h-9.5 text-xs"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-foreground block">
+                      Category
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="e.g. Valves & Controls"
+                      value={formCategory}
+                      onChange={(e) => setFormCategory(e.target.value)}
+                      className="h-9.5 text-xs"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-foreground block">
+                      SKU Code
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="e.g. AST-BV-100"
+                      value={formSku}
+                      onChange={(e) => setFormSku(e.target.value)}
+                      className="h-9.5 text-xs font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-foreground block">
+                      Selling Price (₹)
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="380"
+                      value={formSellingPrice}
+                      onChange={(e) => setFormSellingPrice(e.target.value)}
+                      className="h-9.5 text-xs font-mono"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-foreground block">
+                      Stock Quantity
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="20"
+                      value={formStock}
+                      onChange={(e) => setFormStock(e.target.value)}
+                      className="h-9.5 text-xs font-mono"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-foreground block">
+                      Reorder Level
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="5"
+                      value={formReorderLevel}
+                      onChange={(e) => setFormReorderLevel(e.target.value)}
+                      className="h-9.5 text-xs font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2 rounded-2xl border border-border/80 bg-muted/25 p-4">
+                  <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <Upload className="h-3.5 w-3.5 text-primary" />
+                    <span>
+                      Upload Image to &quot;{SPARE_PARTS_BUCKET_NAME}&quot;
+                      Bucket
+                    </span>
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setFormImageFile(e.target.files?.[0] ?? null)
+                    }
+                    className="block w-full text-xs text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
+                  />
+                  <div className="pt-1">
+                    <label className="text-[11px] text-muted-foreground block mb-1">
+                      Or existing storage path in &quot;{SPARE_PARTS_BUCKET_NAME}
+                      &quot; bucket (<code className="font-mono">image_path</code>
+                      ):
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="e.g. valves/astral-ball-valve.jpg"
+                      value={formImagePath}
+                      onChange={(e) => setFormImagePath(e.target.value)}
+                      className="h-8.5 text-xs font-mono bg-background"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2.5 pt-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAdminProductModal(false)}
+                    className="rounded-xl text-xs h-9"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={savingProduct}
+                    size="sm"
+                    className="rounded-xl text-xs font-semibold h-9 px-4"
+                  >
+                    {savingProduct
+                      ? 'Saving Spare Part...'
+                      : editingPart
+                      ? 'Save Changes'
+                      : 'Save Spare Part'}
+                  </Button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Floating Bottom Cart Bar (Appears when customer has items in cart) */}
       <AnimatePresence>
@@ -1352,7 +1686,7 @@ export function SparePartsSection({ initialParts }: SparePartsSectionProps) {
                   className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs h-9 px-3.5 rounded-xl shadow-xs gap-1.5"
                 >
                   <MessageCircle className="h-3.5 w-3.5" />
-                  <span>WhatsApp Checkout</span>
+                  <span>Review &amp; Send on WhatsApp</span>
                 </Button>
               </div>
             </div>

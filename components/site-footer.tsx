@@ -13,8 +13,12 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { businessInfo } from '@/lib/business-info';
+import {
+  fetchLiveServiceAreas,
+  getCachedServiceAreas,
+  type DbServiceArea,
+} from '@/lib/supabase-data';
 import { BrandLogo } from '@/components/brand-logo';
-import { cn } from '@/lib/utils';
 
 const footerSections = [
   {
@@ -35,7 +39,7 @@ const footerSections = [
     title: 'Customer & Company',
     links: [
       { label: 'About Our Contractors', href: '/about' },
-      { label: 'Customer Reviews (5.0 ★)', href: '/reviews' },
+      { label: 'Verified Client Reviews', href: '/reviews' },
       { label: 'Service Areas & Hubs', href: '/service-areas' },
       { label: 'Plumbing FAQs', href: '/faq' },
       { label: 'Contact Us', href: '/contact' },
@@ -47,11 +51,28 @@ const footerSections = [
 ];
 
 export function SiteFooter() {
-  const [openSections, setOpenSections] = React.useState<Record<string, boolean>>({
+  const [openSections, setOpenSections] = React.useState<
+    Record<string, boolean>
+  >({
     services: false,
     company: false,
     coverage: false,
   });
+  const [liveAreas, setLiveAreas] = React.useState<DbServiceArea[]>(
+    () => getCachedServiceAreas() ?? []
+  );
+
+  React.useEffect(() => {
+    let active = true;
+    fetchLiveServiceAreas().then(({ data }) => {
+      if (active) {
+        setLiveAreas(data);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const toggleSection = (id: string) => {
     setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -67,8 +88,12 @@ export function SiteFooter() {
               <ShieldCheck className="h-4 w-4" />
             </div>
             <div>
-              <p className="font-semibold text-foreground">Verified Local Contractor</p>
-              <p className="text-[11px]">Serving South Bengal households since 2015</p>
+              <p className="font-semibold text-foreground">
+                Verified Local Contractor
+              </p>
+              <p className="text-[11px]">
+                Serving South Bengal households since 2015
+              </p>
             </div>
           </div>
 
@@ -77,8 +102,12 @@ export function SiteFooter() {
               <CheckCircle2 className="h-4 w-4" />
             </div>
             <div>
-              <p className="font-semibold text-foreground">Transparent Written Quotes</p>
-              <p className="text-[11px]">Pay only after work completion &amp; inspection</p>
+              <p className="font-semibold text-foreground">
+                Transparent Written Quotes
+              </p>
+              <p className="text-[11px]">
+                Pay only after work completion &amp; inspection
+              </p>
             </div>
           </div>
 
@@ -87,8 +116,12 @@ export function SiteFooter() {
               <Clock className="h-4 w-4" />
             </div>
             <div>
-              <p className="font-semibold text-foreground">Emergency Hotline Ready</p>
-              <p className="text-[11px]">Direct mobile access to on-duty plumbers</p>
+              <p className="font-semibold text-foreground">
+                Emergency Hotline Ready
+              </p>
+              <p className="text-[11px]">
+                Direct mobile access to on-duty plumbers
+              </p>
             </div>
           </div>
         </div>
@@ -134,17 +167,21 @@ export function SiteFooter() {
                 <span>{businessInfo.email}</span>
               </a>
 
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted shrink-0">
-                  <MapPin className="h-4 w-4" />
+              <div className="flex items-start gap-3 text-muted-foreground">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted shrink-0 mt-0.5">
+                  <MapPin className="h-4 w-4 text-primary" />
                 </span>
-                <span>{businessInfo.address}, {businessInfo.area}</span>
+                <span className="leading-relaxed">{businessInfo.address}</span>
               </div>
             </div>
 
             <div className="pt-2">
               <p className="text-[11px] text-muted-foreground">
-                Accepted Payment: <strong className="text-foreground">Cash, UPI (PhonePe, Google Pay, Paytm), Bank Transfer</strong> after job inspection.
+                Accepted Payment:{' '}
+                <strong className="text-foreground">
+                  Cash, UPI (PhonePe, Google Pay, Paytm), Bank Transfer
+                </strong>{' '}
+                after job inspection.
               </p>
             </div>
           </div>
@@ -153,8 +190,10 @@ export function SiteFooter() {
           {footerSections.map((section) => {
             const isOpen = openSections[section.id];
             return (
-              <div key={section.id} className="border-b lg:border-b-0 border-border/50 pb-4 lg:pb-0">
-                {/* Mobile accordion toggle button with tap feedback */}
+              <div
+                key={section.id}
+                className="border-b lg:border-b-0 border-border/50 pb-4 lg:pb-0"
+              >
                 <motion.button
                   type="button"
                   whileTap={{ scale: 0.98 }}
@@ -172,12 +211,10 @@ export function SiteFooter() {
                   </motion.span>
                 </motion.button>
 
-                {/* Desktop static header */}
                 <h4 className="hidden lg:block font-display font-semibold text-xs uppercase tracking-wider text-foreground mb-4">
                   {section.title}
                 </h4>
 
-                {/* Mobile animated collapsible container */}
                 <div className="lg:hidden">
                   <AnimatePresence initial={false}>
                     {isOpen && (
@@ -207,7 +244,6 @@ export function SiteFooter() {
                   </AnimatePresence>
                 </div>
 
-                {/* Desktop static links list */}
                 <div className="hidden lg:block">
                   <ul className="space-y-2.5">
                     {section.links.map((link) => (
@@ -227,37 +263,45 @@ export function SiteFooter() {
           })}
         </div>
 
-        {/* Service Towns Directory Row */}
-        <div className="mt-12 pt-8 border-t border-border/50">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
-            <p className="text-[11px] font-semibold text-foreground uppercase tracking-wider">
-              Regional Service Coverage Hubs:
-            </p>
-            <span className="text-[11px] text-muted-foreground">
-              Paschim &amp; Purba Medinipur Districts
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-            {businessInfo.serviceAreas.map((town, idx) => (
-              <span key={`${town}-${idx}`} className="inline-flex items-center">
-                <Link
-                  href="/service-areas"
-                  className="hover:text-primary transition-colors hover:underline"
-                >
-                  {town}
-                </Link>
-                {idx < businessInfo.serviceAreas.length - 1 && (
-                  <span className="mx-2 text-border">·</span>
-                )}
+        {/* Live Service Areas Directory Row */}
+        {liveAreas.length > 0 && (
+          <div className="mt-12 pt-8 border-t border-border/50">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
+              <p className="text-[11px] font-semibold text-foreground uppercase tracking-wider">
+                Verified Service Coverage Areas:
+              </p>
+              <span className="text-[11px] text-muted-foreground">
+                Base Workshop: {businessInfo.addressShort} (PIN{' '}
+                {businessInfo.pincode})
               </span>
-            ))}
+            </div>
+            <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+              {liveAreas.map((area, idx) => (
+                <span
+                  key={`${area.id || area.locality}-${idx}`}
+                  className="inline-flex items-center"
+                >
+                  <Link
+                    href={`/book?area=${encodeURIComponent(area.locality)}`}
+                    className="hover:text-primary transition-colors hover:underline"
+                  >
+                    {area.locality}
+                    {area.pincode ? ` (PIN ${area.pincode})` : ''}
+                  </Link>
+                  {idx < liveAreas.length - 1 && (
+                    <span className="mx-2 text-border">·</span>
+                  )}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Copyright and Operating Hours Sub-bar */}
         <div className="mt-8 pt-6 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <p className="text-[11px]">
-            &copy; {new Date().getFullYear()} {businessInfo.name}. All rights reserved.
+            &copy; {new Date().getFullYear()} {businessInfo.name}. All rights
+            reserved.
           </p>
 
           <div className="flex flex-wrap items-center gap-4 text-[11px]">
@@ -266,7 +310,9 @@ export function SiteFooter() {
               <span>{businessInfo.hours}</span>
             </span>
             <span>{businessInfo.hoursDays}</span>
-            <span className="text-muted-foreground font-medium">Sunday: Emergency Calls Only</span>
+            <span className="text-muted-foreground font-medium">
+              Sunday: Emergency Calls Only
+            </span>
           </div>
         </div>
       </div>

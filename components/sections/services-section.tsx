@@ -337,9 +337,9 @@ export function ServicesSection() {
 
                                 <div className="pt-2 border-t border-border/50 space-y-1.5 text-[11px] text-muted-foreground">
                                   <div className="flex items-center justify-between">
-                                    <span>Service Reference:</span>
-                                    <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[180px]">
-                                      {service.id}
+                                    <span>Specification Standard:</span>
+                                    <span className="font-mono text-[10px] font-bold text-primary">
+                                      ISI Class-S Verified
                                     </span>
                                   </div>
                                   <div className="flex items-center justify-between">

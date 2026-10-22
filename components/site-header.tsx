@@ -21,6 +21,7 @@ import {
   ChevronRight,
   HelpCircle,
   Clock,
+  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -113,11 +114,11 @@ export function SiteHeader() {
           <div className="mx-auto flex max-w-7xl items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1.5 font-medium text-foreground">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
                 <span>24/7 Rapid Emergency Response Active</span>
               </span>
               <span className="text-border" aria-hidden="true">·</span>
-              <span>Paschim Medinipur &amp; Purba Medinipur</span>
+              <span>Bahardaltitia, Keshrambha, Dantan (PIN 721451)</span>
             </div>
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1 font-medium">
@@ -308,13 +309,13 @@ export function SiteHeader() {
                 {/* 24/7 Dispatch Status Banner */}
                 <div className="p-3 mb-2 rounded-xl bg-primary/5 border border-primary/20 flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                    <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
                     <div>
                       <span className="font-semibold text-foreground block leading-tight">
                         Emergency Service Active
                       </span>
                       <span className="text-[10px] text-muted-foreground block">
-                        Paschim &amp; Purba Medinipur Units on Duty
+                        Bahardaltitia, Keshrambha, Dantan (PIN 721451)
                       </span>
                     </div>
                   </div>
@@ -402,7 +403,7 @@ export function SiteHeader() {
 
                 <div className="pt-1 text-center">
                   <span className="text-[10px] text-muted-foreground">
-                    10 Hubs across Paschim &amp; Purba Medinipur
+                    HQ: Bahardaltitia, Keshrambha, Dantan · PIN 721451
                   </span>
                 </div>
               </div>

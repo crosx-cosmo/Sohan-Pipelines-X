@@ -100,13 +100,13 @@ export function HomeAboutPreview() {
 
             <div className="space-y-4 text-sm sm:text-base text-muted-foreground leading-relaxed text-pretty font-normal tracking-[0.002em]">
               <p>
-                Founded in Keshrambha, Dantan, <strong className="text-foreground font-semibold">{businessInfo.name}</strong> was
+                Founded in Bahardaltitia, Keshrambha, Dantan (PIN 721451), <strong className="text-foreground font-semibold">{businessInfo.name}</strong> was
                 established on a foundational principle: plumbing is not merely fixing a leak—it
                 is critical infrastructure that protects your property, hygiene, and daily comfort.
               </p>
               <p>
                 Over the past decade, we have completed over 500 installations across residential
-                residences, commercial complexes, schools, and health centres throughout Paschim and Purba Medinipur.
+                residences, commercial complexes, schools, and health centres throughout West Medinipur and South Bengal.
                 We do not employ shortcuts, substandard adhesives, or temporary patches.
               </p>
             </div>
@@ -129,16 +129,16 @@ export function HomeAboutPreview() {
 
               <div className="p-3.5 rounded-2xl bg-card border border-border/60 shadow-xs hover:border-primary/40 transition-colors">
                 <p className="font-display text-2xl font-bold text-foreground tabular-nums font-mono">
-                  {businessInfo.rating} ★
+                  12-Mo
                 </p>
-                <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{businessInfo.reviewCount} Reviews</p>
+                <p className="text-[11px] text-muted-foreground font-medium mt-0.5">Joint Warranty</p>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-card border border-border/60 shadow-xs hover:border-primary/40 transition-colors">
                 <p className="font-display text-2xl font-bold text-foreground tabular-nums font-mono">
-                  10
+                  20+
                 </p>
-                <p className="text-[11px] text-muted-foreground font-medium mt-0.5">Service Towns</p>
+                <p className="text-[11px] text-muted-foreground font-medium mt-0.5">Partner Brands</p>
               </div>
             </div>
 

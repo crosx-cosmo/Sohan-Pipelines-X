@@ -20,6 +20,7 @@ import {
   Sparkles,
   ArrowRight,
   RotateCw,
+  Star,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -68,8 +69,8 @@ function FindBookingContent() {
   const executeLookup = React.useCallback(async (bId: string, ph: string) => {
     const cleanId = bId.trim();
     const cleanPhone = ph.trim();
-    if (!cleanId || !cleanPhone) {
-      toast.error('Please enter both your Booking ID and registered phone number.');
+    if (!cleanId) {
+      toast.error('Please enter your Booking ID (e.g., SP-20261014-054E7D).');
       return;
     }
 
@@ -118,7 +119,7 @@ function FindBookingContent() {
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary shrink-0" />
               <span>
-                Recent booking on this device:{' '}
+                Your Recent Booking Reference:{' '}
                 <strong className="text-foreground">{recentBooking.bookingId}</strong> ({recentBooking.serviceName})
               </span>
             </div>
@@ -386,6 +387,17 @@ function FindBookingContent() {
                     <Phone className="mr-1.5 h-3.5 w-3.5" />
                     Call Dispatch
                   </a>
+                </Button>
+
+                <Button
+                  asChild
+                  size="sm"
+                  className="rounded-xl text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs"
+                >
+                  <Link href={`/reviews?bookingId=${encodeURIComponent(result.bookingId)}#write-review`}>
+                    <Star className="mr-1.5 h-3.5 w-3.5 fill-amber-300 text-amber-300" />
+                    Rate &amp; Review This Work
+                  </Link>
                 </Button>
 
                 <Button

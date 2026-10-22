@@ -84,7 +84,7 @@ export default async function ServiceAreasPage() {
       <PageHeader
         badge="Service Areas"
         title="Areas We Serve"
-        description="Based in Keshrambha, Dantan — we cover Midnapore and surrounding regions across Paschim Medinipur and Purba Medinipur districts."
+        description={`Based at ${businessInfo.address} — explore our verified regional plumbing coverage and PIN code dispatch zones.`}
         breadcrumbPath="/service-areas"
       />
       <ServiceAreasSection />

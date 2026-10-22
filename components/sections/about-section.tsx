@@ -81,8 +81,7 @@ export function AboutSection() {
             <p className="mt-4 text-muted-foreground leading-relaxed text-pretty font-normal tracking-[0.002em]">
               Our team understands the local plumbing challenges — from hard water
               issues to monsoon drainage problems — and we have the experience to solve
-              them efficiently. We are proud of our {businessInfo.rating} rating from{' '}
-              {businessInfo.reviewCount}+ satisfied customers.
+              them efficiently across 500+ residential and commercial installations.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">

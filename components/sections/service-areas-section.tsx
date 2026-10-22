@@ -272,8 +272,8 @@ export function ServiceAreasSection() {
                       </div>
 
                       <div className="mt-3 pt-2.5 border-t border-border/50 flex items-center justify-between text-xs">
-                        <span className="text-[10px] font-mono text-muted-foreground">
-                          ID: {area.id.slice(0, 8)}...
+                        <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
+                          Verified Dispatch Zone
                         </span>
                         <Link
                           href={`/book?area=${encodeURIComponent(area.locality)}`}
@@ -297,8 +297,8 @@ export function ServiceAreasSection() {
               <ShieldCheck className="h-4 w-4" />
               <span>Base Operations &amp; Workshop</span>
             </div>
-            <h3 className="font-display text-xl sm:text-2xl font-bold text-foreground">
-              Located at {businessInfo.address}, {businessInfo.area}
+            <h3 className="font-display text-lg sm:text-xl font-bold text-foreground">
+              {businessInfo.address}
             </h3>
             <p className="text-xs sm:text-sm text-muted-foreground max-w-xl">
               Equipped with heavy solvent weld inventory, motorized drain cleanout machines, acoustic leak detectors, and copper pipe benders.

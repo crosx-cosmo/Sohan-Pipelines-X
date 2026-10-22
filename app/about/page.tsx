@@ -55,9 +55,9 @@ export default function AboutPage() {
       address: {
         '@type': 'PostalAddress',
         streetAddress: businessInfo.address,
-        addressLocality: 'Dantan',
+        addressLocality: 'Keshrambha, Dantan',
         addressRegion: 'West Bengal',
-        postalCode: '721426',
+        postalCode: '721451',
         addressCountry: 'IN',
       },
       telephone: businessInfo.phone,

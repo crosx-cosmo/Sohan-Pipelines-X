@@ -66,9 +66,9 @@ export default function ReviewsPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewsSchema) }}
       />
       <PageHeader
-        badge="Customer Reviews"
-        title="Customer Reviews & Ratings"
-        description="Authentic service ratings and feedback from homeowners and commercial facilities across Midnapore and South Bengal, verified through our service system."
+        badge="Work-Verified Feedback"
+        title="Client Reviews & Work Feedback"
+        description="Every review is verified against a real Sohan Pipelines work order. Enter your booking details, choose your completed or active booking, and submit your work-basis evaluation."
         breadcrumbPath="/reviews"
       />
       <TestimonialsSection />

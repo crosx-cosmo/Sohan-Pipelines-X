@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
@@ -19,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { SparePartImage } from '@/components/spare-part-image';
 import { useCart } from '@/lib/cart-context';
 import { buildCartWhatsAppMessage, getCartWhatsAppUrl } from '@/lib/whatsapp-checkout';
 import { cn } from '@/lib/utils';
@@ -202,13 +202,12 @@ export function CartDrawer() {
                     >
                       {/* Product Thumbnail */}
                       <div className="relative h-20 w-20 rounded-xl overflow-hidden bg-muted/60 shrink-0 border border-border/50">
-                        <Image
-                          src={item.image_url}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
+                        <SparePartImage
+                          name={item.name}
+                          category={item.category}
+                          imageUrl={item.image_url}
                           sizes="80px"
-                          referrerPolicy="no-referrer"
+                          compact
                         />
                       </div>
 

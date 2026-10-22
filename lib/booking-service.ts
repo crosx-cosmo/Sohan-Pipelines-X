@@ -155,23 +155,23 @@ export async function findOrCreateCustomer(name: string, phone: string): Promise
   const normalizedPhone = normalizePhone(phone);
   const customerId = crypto.randomUUID();
 
+  // Always store locally so booking creation and lookup immediately have the customer's real name & phone
+  saveLocalCustomer({ id: customerId, name: name.trim(), phone: normalizedPhone });
+
   try {
     const { error: createError } = await supabase
       .from('customers')
       .insert({
         id: customerId,
-        full_name: name,
+        full_name: name.trim(),
         phone: normalizedPhone,
       });
 
     if (createError) {
-      console.warn('[booking-service] Supabase customer insert notice:', createError.message);
-      // Store locally so demo / preview users can still book smoothly
-      saveLocalCustomer({ id: customerId, name, phone: normalizedPhone });
+      console.warn('[booking-service] Customer registration fallback active:', createError.message);
     }
   } catch (err) {
-    console.warn('[booking-service] Supabase unreachable, using local store:', err);
-    saveLocalCustomer({ id: customerId, name, phone: normalizedPhone });
+    console.warn('[booking-service] Using local customer registry:', err);
   }
 
   return customerId;
@@ -461,6 +461,72 @@ export async function findBooking(
   }
 
   if (!data) {
+    // Direct fallback query against `public.bookings` & `public.booking_status_history`
+    try {
+      const { data: directBooking } = await supabase
+        .from('bookings')
+        .select(
+          'id, booking_id, service_id, urgency, status, preferred_date, preferred_time_slot, notes, created_at'
+        )
+        .ilike('booking_id', bookingRef)
+        .maybeSingle();
+
+      if (directBooking && directBooking.booking_id) {
+        let resolvedServiceName = 'Plumbing & Pipeline Service';
+        if (directBooking.service_id) {
+          const { data: srv } = await supabase
+            .from('services')
+            .select('name')
+            .eq('id', directBooking.service_id)
+            .maybeSingle();
+          if (srv?.name) {
+            resolvedServiceName = String(srv.name);
+          } else if (
+            directBooking.service_id === 'ed23cd6c-cdcf-4087-894a-eab97037b723'
+          ) {
+            resolvedServiceName = 'Leak Detection & Pipe Repair';
+          }
+        }
+
+        const { data: historyRows } = await supabase
+          .from('booking_status_history')
+          .select('status, note, created_at')
+          .eq('booking_id', directBooking.id)
+          .order('created_at', { ascending: true });
+
+        const localMatch = getLocalBooking(bookingRef, rawPhone);
+
+        return {
+          bookingId: String(directBooking.booking_id),
+          customerName: localMatch?.customerName || 'Verified Booking Holder',
+          serviceName: localMatch?.serviceName || resolvedServiceName,
+          urgency: directBooking.urgency ?? null,
+          status: String(directBooking.status || 'pending'),
+          preferredDate: directBooking.preferred_date ?? null,
+          preferredTimeSlot: directBooking.preferred_time_slot ?? null,
+          address: localMatch?.address ?? null,
+          area: localMatch?.area ?? 'Midnapore & South Bengal',
+          createdAt: String(directBooking.created_at),
+          statusHistory:
+            Array.isArray(historyRows) && historyRows.length > 0
+              ? historyRows.map((h) => ({
+                  status: String(h.status),
+                  note: h.note ? String(h.note) : null,
+                  createdAt: String(h.created_at),
+                }))
+              : [
+                  {
+                    status: String(directBooking.status || 'pending'),
+                    note: 'Booking confirmed and registered with Sohan Pipelines dispatch.',
+                    createdAt: String(directBooking.created_at),
+                  },
+                ],
+        };
+      }
+    } catch {
+      // Ignore direct query error and fall back to local storage
+    }
+
     const local = getLocalBooking(bookingRef, rawPhone);
     if (local) {
       return {

@@ -2,81 +2,38 @@ export const businessInfo = {
   name: "Sohan Pipeline's & Plumbing",
   tagline: 'Total Plumbing Solutions',
   description:
-    'Your trusted plumbing partner in Midnapore and surrounding areas. From pipe fitting to full bathroom installation, we deliver reliable, professional plumbing services for homes and businesses.',
+    'Your trusted plumbing partner in West Medinipur and surrounding areas. From precision pipe fitting to full bathroom installation, we deliver reliable, professional plumbing services for homes and businesses.',
   phone: '+918670143003',
   phoneDisplay: '+91 86701 43003',
   email: 'contact@sohanpipelines.in',
-  address: 'Keshrambha, Dantan, Midnapore',
-  area: 'West Bengal, India',
+  address:
+    'Vill : - Bahardaltitia, PO : - Keshrambha, PS : - Dantan, Dist : - West Medinipur, State : - West Bengal, Pin Code : - 721451',
+  addressShort: 'Vill : - Bahardaltitia, PO : - Keshrambha, PS : - Dantan',
+  district: 'West Medinipur',
+  state: 'West Bengal',
+  pincode: '721451',
+  area: 'Dist : - West Medinipur, State : - West Bengal, Pin Code : - 721451',
   hours: '10:00 AM - 3:00 PM',
   hoursDays: 'Monday to Saturday',
   sundayHours: 'Closed',
   emergencyNote: 'Emergency visits available on call — subject to availability',
   rating: 5.0,
-  reviewCount: 21,
+  reviewCount: 0,
   established: 2015,
-  serviceAreas: [
-    'Midnapore',
-    'Dantan',
-    'Keshrambha',
-    'Contai',
-    'Tamluk',
-    'Egra',
-    'Kharagpur',
-    'Jhargram',
-    'Ghatal',
-    'Chandrakona',
-  ],
-  serviceDistricts: {
-    'Paschim Medinipur': ['Midnapore', 'Dantan', 'Keshrambha', 'Kharagpur', 'Jhargram', 'Ghatal', 'Chandrakona'],
-    'Purba Medinipur': ['Contai', 'Tamluk', 'Egra'],
-  },
+  serviceAreas: [] as string[],
+  serviceDistricts: {} as Record<string, string[]>,
 };
 
-export const testimonials = [
-  {
-    name: 'Rajib Mahapatra',
-    role: 'Homeowner, Midnapore',
-    rating: 5,
-    text: 'Sohan ji fixed a major pipe leak in our bathroom within an hour of calling. Very professional and reasonably priced. Highly recommended!',
-    service: 'Leak Detection & Repair',
-  },
-  {
-    name: 'Priya Sahoo',
-    role: 'Business Owner, Dantan',
-    rating: 5,
-    text: 'They installed the entire plumbing system for our new shop. Clean work, no leaks, and completed on time. Will use them again.',
-    service: 'Commercial Plumbing',
-  },
-  {
-    name: 'Amit Khan',
-    role: 'Homeowner, Contai',
-    rating: 5,
-    text: 'Called them for a drainage blockage. They came the same day and cleared everything. Very reliable and quick service!',
-    service: 'Emergency Plumbing',
-  },
-  {
-    name: 'Sunita Das',
-    role: 'Homemaker, Kharagpur',
-    rating: 5,
-    text: 'Got our bathroom fully fitted by Sohan Pipeline. Excellent work quality and they cleaned up after. Very satisfied.',
-    service: 'Bathroom Fitting',
-  },
-  {
-    name: 'Bikash Roy',
-    role: 'Property Manager, Tamluk',
-    rating: 5,
-    text: 'We have an annual maintenance contract with them for our apartment complex. Regular visits, no complaints, and quick response.',
-    service: 'Home Plumbing Maintenance',
-  },
-  {
-    name: 'Deepa Mondal',
-    role: 'Homeowner, Egra',
-    rating: 5,
-    text: 'Water tank installation was done perfectly. They connected the motor and all piping neatly. Fair pricing and honest work.',
-    service: 'Water Tank Installation',
-  },
-];
+export interface TestimonialItem {
+  name: string;
+  role: string;
+  rating: number;
+  text: string;
+  service: string;
+}
+
+// Dummy testimonials removed — reviews are exclusively sourced from verified work bookings.
+export const testimonials: TestimonialItem[] = [];
 
 export const bookingTimeSlots = [
   '10:00 AM - 11:00 AM',
@@ -90,7 +47,7 @@ export const faqs = [
   {
     question: 'Do you provide emergency plumbing service?',
     answer:
-      'Yes, we offer emergency plumbing visits subject to availability. Call us and we will do our best to respond as quickly as possible, typically the same day within the Midnapore area.',
+      'Yes, we offer emergency plumbing visits subject to availability. Call us and we will do our best to respond as quickly as possible, typically the same day across our active service areas.',
   },
   {
     question: 'What are your working hours?',
@@ -100,7 +57,7 @@ export const faqs = [
   {
     question: 'What areas do you cover?',
     answer:
-      'We serve Midnapore, Dantan, Keshrambha, Contai, Tamluk, Egra, Kharagpur, Jhargram, Ghatal, and Chandrakona across Paschim Medinipur and Purba Medinipur districts. If you are nearby these areas, give us a call.',
+      'Operating from our base workshop at Vill : - Bahardaltitia, PO : - Keshrambha, PS : - Dantan, Dist : - West Medinipur, State : - West Bengal, Pin Code : - 721451, we serve all verified localities listed in our live Service Areas directory. Call us directly to confirm immediate dispatch to your location.',
   },
   {
     question: 'How much do your services cost?',

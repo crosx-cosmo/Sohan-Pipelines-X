@@ -1,101 +1,137 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, Navigation, Radio, ShieldCheck, Clock, CheckCircle2 } from 'lucide-react';
+import {
+  Navigation,
+  CheckCircle2,
+  MapPin,
+  ArrowRight,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { businessInfo } from '@/lib/business-info';
+import {
+  fetchLiveServiceAreas,
+  getCachedServiceAreas,
+  type DbServiceArea,
+} from '@/lib/supabase-data';
+
+interface HubNode {
+  id: string;
+  locality: string;
+  name: string;
+  district: string;
+  pincode: string;
+  type: string;
+  eta: string;
+  status: string;
+  isHQ?: boolean;
+  x: number;
+  y: number;
+}
+
+const KNOWN_NODE_COORDS: Record<string, { x: number; y: number }> = {
+  bahardaltitia: { x: 220, y: 220 },
+  keshrambha: { x: 220, y: 220 },
+  dantan: { x: 200, y: 235 },
+  belda: { x: 265, y: 170 },
+  narayangarh: { x: 255, y: 145 },
+  kharagpur: { x: 245, y: 110 },
+  midnapore: { x: 230, y: 65 },
+  medinipur: { x: 230, y: 65 },
+  jhargram: { x: 100, y: 110 },
+  ghatal: { x: 340, y: 55 },
+  chandrakona: { x: 310, y: 60 },
+  egra: { x: 330, y: 205 },
+  contai: { x: 400, y: 235 },
+  tamluk: { x: 425, y: 120 },
+};
+
+function getCoordinatesForArea(locality: string, index: number, total: number) {
+  const key = locality.trim().toLowerCase();
+  if (KNOWN_NODE_COORDS[key]) {
+    return KNOWN_NODE_COORDS[key];
+  }
+  const angle = -Math.PI * 0.8 + (index / Math.max(1, total)) * Math.PI * 1.1;
+  const radius = 115 + (index % 2) * 30;
+  return {
+    x: Math.round(220 + Math.cos(angle) * radius),
+    y: Math.round(180 + Math.sin(angle) * radius * 0.75),
+  };
+}
 
 export function DispatchHubMap() {
-  const [activeHub, setActiveHub] = React.useState<string>('Dantan');
+  const [areas, setAreas] = React.useState<DbServiceArea[]>(
+    () => getCachedServiceAreas() ?? []
+  );
+  const [activeNodeId, setActiveNodeId] = React.useState<string>('');
 
-  const hubs = [
-    {
-      id: 'Dantan',
-      name: 'Dantan & Keshrambha',
-      district: 'Paschim Medinipur',
-      type: 'Headquarters & Primary Depot',
-      eta: 'Immediate (15–30 min)',
-      status: 'Active · On Duty',
-      x: 210,
-      y: 220,
-    },
-    {
-      id: 'Kharagpur',
-      name: 'Kharagpur Railway & IIT Hub',
-      district: 'Paschim Medinipur',
-      type: 'Industrial & Residential Line',
-      eta: '30–45 min dispatch',
-      status: 'Active · Available',
-      x: 250,
-      y: 130,
-    },
-    {
-      id: 'Midnapore',
-      name: 'Midnapore Town Division',
-      district: 'Paschim Medinipur',
-      type: 'Administrative Headquarters',
-      eta: '45–60 min dispatch',
-      status: 'Active · Available',
-      x: 230,
-      y: 70,
-    },
-    {
-      id: 'Jhargram',
-      name: 'Jhargram Branch Route',
-      district: 'Paschim Medinipur border',
-      type: 'Regional Service Fleet',
-      eta: 'Scheduled visit',
-      status: 'Available on slot',
-      x: 90,
-      y: 110,
-    },
-    {
-      id: 'Ghatal',
-      name: 'Ghatal & Chandrakona',
-      district: 'Paschim Medinipur (North)',
-      type: 'High-Volume Drainage Hub',
-      eta: 'Scheduled booking',
-      status: 'Available on slot',
-      x: 340,
-      y: 50,
-    },
-    {
-      id: 'Egra',
-      name: 'Egra Township',
-      district: 'Purba Medinipur',
-      type: 'Subdivisional Depot Route',
-      eta: '45–60 min dispatch',
-      status: 'Active · Available',
-      x: 320,
-      y: 200,
-    },
-    {
-      id: 'Contai',
-      name: 'Contai (Kanthi) Hub',
-      district: 'Purba Medinipur',
-      type: 'Coastal Sanitary Division',
-      eta: 'Daily scheduled slots',
-      status: 'Active · Available',
-      x: 390,
-      y: 240,
-    },
-    {
-      id: 'Tamluk',
-      name: 'Tamluk Port & Town',
-      district: 'Purba Medinipur',
-      type: 'Commercial Pipeline Unit',
-      eta: 'Daily scheduled slots',
-      status: 'Active · Available',
-      x: 430,
-      y: 120,
-    },
-  ];
+  React.useEffect(() => {
+    let active = true;
+    fetchLiveServiceAreas().then(({ data }) => {
+      if (!active) return;
+      setAreas(data);
+      if (data.length > 0) {
+        setActiveNodeId((prev) => prev || data[0].id || data[0].locality);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
-  const selected = hubs.find((h) => h.id === activeHub) || hubs[0];
+  const hqNode: HubNode = {
+    id: 'hq-keshrambha',
+    locality: 'Keshrambha',
+    name: 'Bahardaltitia, PO - Keshrambha, PS - Dantan',
+    district: businessInfo.district,
+    pincode: businessInfo.pincode,
+    type: 'Headquarters & Spare Parts Counter',
+    eta: 'Base Workshop Origin',
+    status: `Active · PIN ${businessInfo.pincode}`,
+    isHQ: true,
+    x: 170,
+    y: 220,
+  };
+
+  const serviceNodes: HubNode[] = React.useMemo(() => {
+    return areas.map((area, idx) => {
+      const coords = getCoordinatesForArea(area.locality, idx, areas.length);
+      return {
+        id: area.id || area.locality,
+        locality: area.locality,
+        name: `${area.locality} Service Zone`,
+        district: area.district || 'West Medinipur',
+        pincode: area.pincode || '721451',
+        type: area.block
+          ? `Block: ${area.block}${
+              area.subdivision ? ` · Subdivision: ${area.subdivision}` : ''
+            }`
+          : 'Verified Plumbing & Pipeline Coverage',
+        eta: 'Same-Day Technician Dispatch',
+        status: `Active · PIN ${area.pincode || '721451'}`,
+        isHQ: false,
+        x: coords.x,
+        y: coords.y,
+      };
+    });
+  }, [areas]);
+
+  const allNodes = React.useMemo(
+    () => [hqNode, ...serviceNodes],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [serviceNodes]
+  );
+
+  const selected =
+    allNodes.find((n) => n.id === activeNodeId) ||
+    serviceNodes[0] ||
+    hqNode;
 
   return (
     <div className="relative rounded-2xl border border-border/80 bg-card/95 dark:bg-card/85 backdrop-blur-xl p-5 sm:p-6 shadow-crisp-md overflow-hidden render-crisp">
-      {/* Background Cartographic Grid with crisp hairline lines */}
+      {/* Background Cartographic Grid */}
       <div className="absolute inset-0 bg-grid-blueprint opacity-[0.3] dark:opacity-[0.2] pointer-events-none" />
 
       {/* Header bar */}
@@ -106,23 +142,25 @@ export function DispatchHubMap() {
               <Navigation className="h-3.5 w-3.5" />
             </div>
             <h3 className="font-display font-bold text-sm sm:text-base text-foreground">
-              South Bengal Regional Dispatch Grid
+              Regional Service Area &amp; Pin Code Dispatch Grid
             </h3>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Operational route matrix covering all 10 verified service municipalities &amp; townships
+            Live route coverage from {businessInfo.addressShort} (PIN{' '}
+            {businessInfo.pincode}) to {areas.length} active service{' '}
+            {areas.length === 1 ? 'area' : 'areas'}
           </p>
         </div>
 
         <div className="flex items-center gap-2 text-xs font-mono">
-          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/25">
+          <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold border border-emerald-500/25">
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>HQ Online: Keshrambha</span>
+            <span>HQ: Bahardaltitia · PIN {businessInfo.pincode}</span>
           </span>
         </div>
       </div>
 
-      {/* SVG Network Map with High-Resolution Geometry */}
+      {/* SVG Network Map */}
       <div className="relative z-10 py-4">
         <svg
           viewBox="0 0 500 280"
@@ -134,70 +172,63 @@ export function DispatchHubMap() {
         >
           <defs>
             <filter id="hubDrop" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor="#000000" floodOpacity="0.18" />
+              <feDropShadow
+                dx="0"
+                dy="1"
+                stdDeviation="1.5"
+                floodColor="#000000"
+                floodOpacity="0.18"
+              />
             </filter>
           </defs>
 
-          {/* Arterial Connecting Routes with High Contrast */}
-          {/* Dantan -> Kharagpur -> Midnapore */}
-          <line x1="210" y1="220" x2="250" y2="130" stroke="hsl(var(--primary))" strokeWidth="2.5" strokeDasharray="5 5" opacity="0.8" />
-          <line x1="250" y1="130" x2="230" y2="70" stroke="hsl(var(--primary))" strokeWidth="2.5" strokeDasharray="5 5" opacity="0.8" />
-          {/* Dantan -> Jhargram */}
-          <line x1="210" y1="220" x2="90" y2="110" stroke="hsl(var(--border))" strokeWidth="2" strokeDasharray="4 4" opacity="0.7" />
-          {/* Midnapore -> Ghatal */}
-          <line x1="230" y1="70" x2="340" y2="50" stroke="hsl(var(--border))" strokeWidth="2" strokeDasharray="4 4" opacity="0.7" />
-          {/* Dantan -> Egra -> Contai */}
-          <line x1="210" y1="220" x2="320" y2="200" stroke="hsl(var(--primary))" strokeWidth="2.5" strokeDasharray="5 5" opacity="0.8" />
-          <line x1="320" y1="200" x2="390" y2="240" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="5 5" opacity="0.7" />
-          {/* Egra -> Tamluk */}
-          <line x1="320" y1="200" x2="430" y2="120" stroke="hsl(var(--border))" strokeWidth="2" strokeDasharray="4 4" opacity="0.7" />
-          {/* Kharagpur -> Tamluk */}
-          <line x1="250" y1="130" x2="430" y2="120" stroke="hsl(var(--border))" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.5" />
+          {/* Connecting Routes from HQ to every Live Database Service Area */}
+          {serviceNodes.map((node, idx) => (
+            <React.Fragment key={`route-${node.id}`}>
+              <line
+                x1={hqNode.x}
+                y1={hqNode.y}
+                x2={node.x}
+                y2={node.y}
+                stroke="hsl(var(--primary))"
+                strokeWidth="2.5"
+                strokeDasharray="5 5"
+                opacity="0.85"
+              />
+              <motion.circle
+                cx={hqNode.x}
+                cy={hqNode.y}
+                r="4.5"
+                fill="hsl(var(--primary))"
+                stroke="#ffffff"
+                strokeWidth="1.5"
+                animate={{
+                  cx: [hqNode.x, node.x],
+                  cy: [hqNode.y, node.y],
+                  opacity: [1, 0.9, 0],
+                }}
+                transition={{
+                  duration: 3 + (idx % 3) * 0.5,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              />
+            </React.Fragment>
+          ))}
 
-          {/* Animated dispatch signal pulses travelling from Dantan */}
-          <motion.circle
-            cx="210"
-            cy="220"
-            r="4.5"
-            fill="hsl(var(--primary))"
-            stroke="#ffffff"
-            strokeWidth="1.5"
-            animate={{
-              cx: [210, 250, 230],
-              cy: [220, 130, 70],
-              opacity: [1, 0.9, 0],
-            }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.circle
-            cx="210"
-            cy="220"
-            r="4.5"
-            fill="hsl(var(--primary))"
-            stroke="#ffffff"
-            strokeWidth="1.5"
-            animate={{
-              cx: [210, 320, 390],
-              cy: [220, 200, 240],
-              opacity: [1, 0.9, 0],
-            }}
-            transition={{ duration: 4, delay: 1, repeat: Infinity, ease: 'easeInOut' }}
-          />
-
-          {/* Interactive Hub Markers with High-Contrast Pill Badges */}
-          {hubs.map((hub) => {
-            const isSelected = hub.id === activeHub;
-            const isHQ = hub.id === 'Dantan';
-            const labelAbove = hub.y > 100;
+          {/* Interactive Hub Markers */}
+          {allNodes.map((hub) => {
+            const isSelected = hub.id === selected.id;
+            const isHQ = Boolean(hub.isHQ);
+            const labelAbove = hub.y > 120;
 
             return (
               <g
                 key={hub.id}
                 transform={`translate(${hub.x}, ${hub.y})`}
-                onClick={() => setActiveHub(hub.id)}
+                onClick={() => setActiveNodeId(hub.id)}
                 className="cursor-pointer group"
               >
-                {/* Outer ripple for HQ */}
                 {isHQ && (
                   <motion.circle
                     cx="0"
@@ -211,43 +242,60 @@ export function DispatchHubMap() {
                   />
                 )}
 
-                {/* Node Target Circle */}
                 <circle
                   cx="0"
                   cy="0"
-                  r={isHQ ? 9 : 7}
-                  fill={isHQ ? 'hsl(var(--primary))' : isSelected ? 'hsl(var(--foreground))' : 'hsl(var(--card))'}
-                  stroke={isHQ ? 'hsl(var(--primary))' : 'hsl(var(--foreground))'}
+                  r={isHQ ? 9 : 8}
+                  fill={
+                    isHQ
+                      ? 'hsl(var(--primary))'
+                      : isSelected
+                        ? 'hsl(var(--foreground))'
+                        : 'hsl(var(--card))'
+                  }
+                  stroke={
+                    isHQ ? 'hsl(var(--primary))' : 'hsl(var(--foreground))'
+                  }
                   strokeWidth={2}
                   filter="url(#hubDrop)"
                   className="transition-transform duration-200 group-hover:scale-125"
                 />
 
-                {/* Center dot */}
                 <circle
                   cx="0"
                   cy="0"
-                  r={isHQ ? 4 : 2.5}
-                  fill={isHQ ? '#ffffff' : isSelected ? 'hsl(var(--background))' : 'hsl(var(--primary))'}
+                  r={isHQ ? 4 : 3}
+                  fill={
+                    isHQ
+                      ? '#ffffff'
+                      : isSelected
+                        ? 'hsl(var(--background))'
+                        : 'hsl(var(--primary))'
+                  }
                 />
 
-                {/* High-Contrast Label Pill Backdrop */}
-                <g transform={`translate(0, ${labelAbove ? -16 : 18})`}>
+                <g transform={`translate(0, ${labelAbove ? -18 : 20})`}>
                   <rect
-                    x="-34"
-                    y="-9"
-                    width="68"
-                    height="18"
-                    rx="4"
+                    x="-52"
+                    y="-10"
+                    width="104"
+                    height="20"
+                    rx="5"
                     fill="hsl(var(--card))"
-                    stroke={isSelected ? 'hsl(var(--primary))' : isHQ ? 'hsl(var(--foreground))' : 'hsl(var(--border))'}
+                    stroke={
+                      isSelected
+                        ? 'hsl(var(--primary))'
+                        : isHQ
+                          ? 'hsl(var(--foreground))'
+                          : 'hsl(var(--border))'
+                    }
                     strokeWidth={isSelected ? 1.5 : 1}
                     filter="url(#hubDrop)"
                   />
                   <text
                     x="0"
                     y="3"
-                    fontSize={isHQ ? '9' : '8.5'}
+                    fontSize="8.5"
                     fontWeight={isHQ || isSelected ? '700' : '600'}
                     textAnchor="middle"
                     fill="currentColor"
@@ -255,11 +303,13 @@ export function DispatchHubMap() {
                       isSelected
                         ? 'fill-primary font-bold'
                         : isHQ
-                        ? 'fill-foreground font-bold'
-                        : 'fill-foreground/90'
+                          ? 'fill-foreground font-bold'
+                          : 'fill-foreground/90'
                     }`}
                   >
-                    {hub.id} {isHQ && '★'}
+                    {isHQ
+                      ? `HQ (${hub.pincode})`
+                      : `${hub.locality} (${hub.pincode})`}
                   </text>
                 </g>
               </g>
@@ -268,7 +318,7 @@ export function DispatchHubMap() {
         </svg>
       </div>
 
-      {/* Selected Hub Telemetry Card with High Contrast & Animated Presence */}
+      {/* Selected Hub Details Card */}
       <AnimatePresence mode="wait">
         <motion.div
           key={selected.id}
@@ -279,24 +329,36 @@ export function DispatchHubMap() {
           className="relative z-10 p-4 rounded-xl bg-card border border-border/80 shadow-crisp-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
         >
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
               <span className="font-bold text-foreground text-sm">
                 {selected.name}
               </span>
-              <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-md bg-primary/10 text-primary font-bold border border-primary/20">
-                {selected.district}
+              <span className="text-[11px] font-mono text-primary font-bold">
+                ·Dist : - {selected.district} · Pin Code : - {selected.pincode}
               </span>
             </div>
             <p className="text-muted-foreground text-xs mt-1">
-              {selected.type} · Typical response: <strong className="text-foreground font-semibold">{selected.eta}</strong>
+              {selected.type} · Response:{' '}
+              <strong className="text-foreground font-semibold">
+                {selected.eta}
+              </strong>
             </p>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-300 font-bold text-xs px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>{selected.status}</span>
-            </div>
+            <Button
+              asChild
+              size="sm"
+              className="h-8 rounded-lg text-xs font-semibold"
+            >
+              <Link
+                href={`/book?area=${encodeURIComponent(selected.locality)}`}
+              >
+                Book in {selected.locality}
+                <ArrowRight className="ml-1.5 h-3 w-3" />
+              </Link>
+            </Button>
           </div>
         </motion.div>
       </AnimatePresence>

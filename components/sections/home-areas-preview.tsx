@@ -120,7 +120,7 @@ export function HomeAreasPreview() {
               Service Coverage &amp; Dispatch Hubs
             </h2>
             <p className="mt-3 text-base text-muted-foreground leading-relaxed text-pretty font-normal tracking-[0.002em]">
-              Operating from Keshrambha and Dantan, we provide verified emergency and scheduled plumbing dispatch across South Bengal.
+              Operating from {businessInfo.addressShort} (Pin Code : - {businessInfo.pincode}), we provide verified emergency and scheduled plumbing dispatch across West Medinipur and South Bengal.
             </p>
           </div>
 

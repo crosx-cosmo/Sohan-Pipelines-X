@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { PageLayout } from '@/components/page-layout';
 import { PageHeader } from '@/components/page-header';
 import { ServicesSection } from '@/components/sections/services-section';
-import { services } from '@/lib/services';
 import { SITE_LOGO_URL } from '@/lib/site-logo';
 
 export const metadata: Metadata = {
