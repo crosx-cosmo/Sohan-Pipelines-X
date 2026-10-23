@@ -102,7 +102,7 @@ export function HeroSection() {
   };
 
   return (
-    <section className="relative overflow-x-clip pt-24 pb-16 lg:pt-32 lg:pb-24 border-b border-border/60">
+    <section className="relative overflow-x-clip pt-24 pb-14 lg:pt-28 lg:pb-16 border-b border-border/60">
       {/* Precision Blueprint Grid & Subtle Atmospheric Radial Lighting */}
       <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden">
         <div className="absolute inset-0 bg-grid-blueprint opacity-[0.06] dark:opacity-[0.12]" />
@@ -155,8 +155,8 @@ export function HeroSection() {
               SOHAN PIPELINES delivers end-to-end plumbing engineering across
               West Medinipur and surrounding regions—combining genuine Astral
               &amp; Supreme spare parts counter sales with hydrostatic
-              pressure-tested installations, concealed leak detection, and rapid
-              emergency dispatch.
+              pressure-tested installations, concealed leak detection, and
+              dependable local dispatch.
             </p>
 
             {/* Primary Conversion Controls */}
@@ -315,10 +315,10 @@ export function HeroSection() {
               <div className="rounded-xl border border-border/60 bg-card/60 p-3 space-y-1">
                 <div className="flex items-center gap-1.5 text-primary font-bold">
                   <Clock className="h-4 w-4 shrink-0" />
-                  <span>15–30 Min ETA</span>
+                  <span>Same-Day Slots</span>
                 </div>
                 <p className="text-[11px] text-muted-foreground leading-snug">
-                  Rapid local dispatch units
+                  Scheduled &amp; emergency visits
                 </p>
               </div>
 

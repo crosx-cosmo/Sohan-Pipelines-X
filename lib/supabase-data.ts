@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { getSparePartImageUrl } from '@/lib/spare-parts-mapping';
 import {
   Wrench,
   Droplets,
@@ -608,7 +609,7 @@ export async function fetchLiveReviews(options: { forceRefresh?: boolean } = {})
  * - purchase_price: numeric
  * - reorder_level: integer
  * - supplier_id: uuid (foreign key -> public.suppliers.id)
- * - image_path: text (storage path in the "Spare Parts" Supabase Storage bucket)
+ * - image_path: text (storage path in the "spare-part-images" Supabase Storage bucket, e.g. "parts/<filename>")
  * - created_at: timestamptz
  */
 export interface DbSparePartSupplier {
@@ -703,6 +704,7 @@ export async function fetchLiveSpareParts(
           row.purchase_price !== null && row.purchase_price !== undefined
             ? Number(row.purchase_price)
             : null,
+        image_url: getSparePartImageUrl(row),
       }));
 
       if (freshData.length > 0) {

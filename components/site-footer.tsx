@@ -263,20 +263,20 @@ export function SiteFooter() {
           })}
         </div>
 
-        {/* Live Service Areas Directory Row */}
+        {/* Live Service Areas Directory Row (Concise Summary) */}
         {liveAreas.length > 0 && (
-          <div className="mt-12 pt-8 border-t border-border/50">
+          <div className="mt-10 pt-8 border-t border-border/50">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
               <p className="text-[11px] font-semibold text-foreground uppercase tracking-wider">
-                Verified Service Coverage Areas:
+                Key Service Hubs:
               </p>
               <span className="text-[11px] text-muted-foreground">
                 Base Workshop: {businessInfo.addressShort} (PIN{' '}
                 {businessInfo.pincode})
               </span>
             </div>
-            <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-              {liveAreas.map((area, idx) => (
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[11px] text-muted-foreground">
+              {liveAreas.slice(0, 8).map((area, idx) => (
                 <span
                   key={`${area.id || area.locality}-${idx}`}
                   className="inline-flex items-center"
@@ -286,13 +286,17 @@ export function SiteFooter() {
                     className="hover:text-primary transition-colors hover:underline"
                   >
                     {area.locality}
-                    {area.pincode ? ` (PIN ${area.pincode})` : ''}
+                    {area.pincode ? ` (${area.pincode})` : ''}
                   </Link>
-                  {idx < liveAreas.length - 1 && (
-                    <span className="mx-2 text-border">·</span>
-                  )}
+                  <span className="ml-2 text-border">·</span>
                 </span>
               ))}
+              <Link
+                href="/service-areas"
+                className="font-semibold text-primary hover:underline"
+              >
+                View All Service Areas &rarr;
+              </Link>
             </div>
           </div>
         )}

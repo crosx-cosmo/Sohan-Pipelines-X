@@ -37,10 +37,9 @@ export function BrandLogo({ className, size = 'md' }: BrandLogoProps) {
         <Image
           src={SITE_LOGO_URL}
           alt="Sohan Pipeline's & Plumbing"
-          width={px * 2} // 2x density for retina upscaling
+          width={px * 2}
           height={px * 2}
-          quality={100}
-          unoptimized
+          quality={95}
           referrerPolicy="no-referrer"
           onError={() => setImageError(true)}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"

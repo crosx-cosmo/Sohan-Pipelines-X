@@ -205,6 +205,7 @@ export function CartDrawer() {
                         <SparePartImage
                           name={item.name}
                           category={item.category}
+                          imagePath={item.image_path}
                           imageUrl={item.image_url}
                           sizes="80px"
                           compact

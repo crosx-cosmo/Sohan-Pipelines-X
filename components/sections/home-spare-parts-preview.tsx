@@ -95,6 +95,7 @@ export function HomeSparePartsPreview() {
           part.stock !== undefined && part.stock !== null
             ? Number(part.stock)
             : null,
+        image_path: part.image_path ?? null,
         image_url: getSparePartImageUrl(part),
       },
       1
@@ -102,15 +103,15 @@ export function HomeSparePartsPreview() {
   };
 
   return (
-    <section className="py-20 lg:py-28 bg-background border-b border-border/60">
+    <section className="py-16 lg:py-20 bg-background border-b border-border/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-40px' }}
-          transition={{ duration: 0.5, ease: luxuryEasing }}
-          className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12"
+          transition={{ duration: 0.45, ease: luxuryEasing }}
+          className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10"
         >
           <div className="max-w-2xl">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.065em] text-primary mb-2.5">
@@ -135,7 +136,7 @@ export function HomeSparePartsPreview() {
                 onClick={openCart}
                 variant="outline"
                 size="sm"
-                className="font-semibold text-xs h-9.5 rounded-xl border-emerald-500/40 text-emerald-700 dark:text-emerald-400"
+                className="font-semibold text-xs h-10 rounded-xl border-emerald-500/40 text-emerald-700 dark:text-emerald-400"
               >
                 <ShoppingBag className="mr-1.5 h-3.5 w-3.5" />
                 Cart ({totalItemsCount})
@@ -144,10 +145,10 @@ export function HomeSparePartsPreview() {
             <Button
               asChild
               size="sm"
-              className="font-semibold text-xs h-9.5 rounded-xl shadow-sm"
+              className="font-semibold text-xs h-10 px-4 rounded-xl shadow-xs"
             >
               <Link href="/spare-parts">
-                Explore Spare Parts Storefront
+                View All Spare Parts
                 <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
               </Link>
             </Button>
@@ -160,16 +161,21 @@ export function HomeSparePartsPreview() {
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="rounded-2xl border border-border/70 bg-card overflow-hidden p-4 space-y-4 animate-pulse"
+                className="rounded-2xl border border-border/70 bg-card overflow-hidden p-0 space-y-0 animate-pulse flex flex-col justify-between"
               >
-                <div className="h-44 w-full rounded-xl bg-muted/70" />
-                <div className="space-y-2">
-                  <div className="h-3.5 w-24 rounded bg-muted/70" />
-                  <div className="h-5 w-3/4 rounded bg-muted/80" />
-                </div>
-                <div className="pt-3 border-t border-border/50 flex items-center justify-between">
-                  <div className="h-6 w-20 rounded bg-muted/80" />
-                  <div className="h-9 w-28 rounded-xl bg-muted/80" />
+                <div className="w-full aspect-[4/3] bg-muted/60 border-b border-border/50" />
+                <div className="p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="h-4 w-24 rounded-md bg-muted/70" />
+                    <div className="h-4 w-16 rounded-md bg-muted/70" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-5 w-3/4 rounded bg-muted/80" />
+                  </div>
+                  <div className="pt-3 border-t border-border/50 flex items-center justify-between">
+                    <div className="h-6 w-20 rounded bg-muted/80" />
+                    <div className="h-9 w-28 rounded-xl bg-muted/80" />
+                  </div>
                 </div>
               </div>
             ))}
@@ -198,63 +204,61 @@ export function HomeSparePartsPreview() {
                     ease: luxuryEasing,
                   }}
                 >
-                  <Card className="group h-full rounded-2xl border border-border/80 bg-card overflow-hidden transition-all duration-200 flex flex-col justify-between shadow-crisp-xs hover:shadow-crisp-md hover:border-primary/50">
+                  <Card className="group h-full p-0 gap-0 rounded-2xl border border-border/80 bg-card overflow-hidden transition-all duration-200 flex flex-col justify-between shadow-crisp-xs hover:shadow-crisp-md hover:border-primary/50">
                     <div>
-                      <div className="relative h-44 w-full bg-slate-950/5 dark:bg-slate-950/40 overflow-hidden border-b border-border/60">
+                      <div className="relative w-full aspect-[4/3] bg-white dark:bg-slate-900/95 overflow-hidden border-b border-border/60">
                         <SparePartImage
                           name={part.name}
                           category={part.category}
                           imagePath={part.image_path}
                           imageUrl={part.image_url}
                           isOutOfStock={isOutOfStock}
-                          className="group-hover:scale-105"
+                          className="group-hover:scale-[1.03]"
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-transparent to-slate-950/20 pointer-events-none" />
-
-                        <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-1.5 z-10">
-                          <span className="px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-background/90 backdrop-blur-md text-foreground border border-border/70 truncate max-w-[70%]">
-                            {part.category || 'Plumbing Hardware'}
-                          </span>
-                          {inCartQty > 0 && (
-                            <button
-                              type="button"
-                              onClick={openCart}
-                              className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-600 text-white flex items-center gap-1 cursor-pointer"
-                            >
-                              <Check className="h-2.5 w-2.5" />
-                              <span>{inCartQty}</span>
-                            </button>
-                          )}
-                        </div>
-
-                        <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between gap-2 z-10">
-                          {part.sku ? (
-                            <span className="text-[10px] font-mono text-white/90 bg-slate-950/70 backdrop-blur-xs px-2 py-0.5 rounded border border-white/15 truncate">
-                              {part.sku}
-                            </span>
-                          ) : (
-                            <span />
-                          )}
-                          <span
-                            className={cn(
-                              'px-2 py-0.5 rounded text-[10px] font-semibold backdrop-blur-md border shrink-0',
-                              isOutOfStock
-                                ? 'bg-destructive/90 text-white border-destructive'
-                                : 'bg-emerald-600/90 text-white border-emerald-500/50'
-                            )}
-                          >
-                            {isOutOfStock
-                              ? 'Out of Stock'
-                              : part.stock !== null && part.stock !== undefined
-                              ? `${part.stock} in Stock`
-                              : 'In Stock'}
-                          </span>
-                        </div>
                       </div>
 
                       <CardContent className="p-4 space-y-2.5">
+                        {/* Category & Stock Status Row (Placed cleanly outside image area) */}
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20 truncate max-w-[58%]">
+                            {part.category || 'Plumbing Hardware'}
+                          </span>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {inCartQty > 0 && (
+                              <button
+                                type="button"
+                                onClick={openCart}
+                                className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-600 text-white flex items-center gap-1 cursor-pointer"
+                              >
+                                <Check className="h-2.5 w-2.5" />
+                                <span>{inCartQty}</span>
+                              </button>
+                            )}
+                            <span
+                              className={cn(
+                                'px-2 py-0.5 rounded-md text-[10px] font-semibold border shrink-0',
+                                isOutOfStock
+                                  ? 'bg-destructive/10 text-destructive border-destructive/30'
+                                  : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25'
+                              )}
+                            >
+                              {isOutOfStock
+                                ? 'Out of Stock'
+                                : part.stock !== null && part.stock !== undefined
+                                ? `${part.stock} in Stock`
+                                : 'In Stock'}
+                            </span>
+                          </div>
+                        </div>
+
                         <div>
+                          {part.sku && (
+                            <span className="inline-block text-[10px] font-mono text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded border border-border/60 mb-1">
+                              SKU: {part.sku}
+                            </span>
+                          )}
                           <h3 className="font-display font-bold text-sm text-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors">
                             {part.name}
                           </h3>
@@ -386,7 +390,7 @@ export function HomeSparePartsPreview() {
             className="font-bold text-primary hover:underline whitespace-nowrap flex items-center gap-1"
           >
             <Package className="h-3.5 w-3.5" />
-            <span>Open Full Spare Parts Storefront &rarr;</span>
+            <span>View All Spare Parts &rarr;</span>
           </Link>
         </div>
       </div>

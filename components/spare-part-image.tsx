@@ -94,23 +94,52 @@ export function SparePartImage({
   );
 
   const [failedUrl, setFailedUrl] = React.useState<string | null>(null);
+  const [loadedUrl, setLoadedUrl] = React.useState<string | null>(null);
+
   const showImage = Boolean(resolvedUrl && failedUrl !== resolvedUrl);
+  const isImageLoading = Boolean(showImage && resolvedUrl && loadedUrl !== resolvedUrl);
 
   if (showImage && resolvedUrl) {
     return (
-      <Image
-        src={resolvedUrl}
-        alt={name}
-        fill
-        sizes={sizes}
-        referrerPolicy="no-referrer"
-        onError={() => setFailedUrl(resolvedUrl)}
+      <div
         className={cn(
-          'object-cover transition-transform duration-500',
-          isOutOfStock && 'grayscale-[40%]',
-          className
+          'absolute inset-0 flex items-center justify-center bg-white dark:bg-slate-900/95 overflow-hidden select-none',
+          compact ? 'p-1.5' : 'p-3 sm:p-4'
         )}
-      />
+      >
+        {/* Subtle loading shimmer while the product image loads to prevent layout shifts */}
+        {isImageLoading && (
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 z-10 flex items-center justify-center bg-slate-100/90 dark:bg-slate-900/90 animate-pulse"
+          >
+            <div
+              className={cn(
+                'rounded-xl bg-slate-200/80 dark:bg-slate-800/80',
+                compact ? 'h-8 w-8' : 'h-20 w-20'
+              )}
+            />
+          </div>
+        )}
+
+        <div className="relative h-full w-full flex items-center justify-center">
+          <Image
+            src={resolvedUrl}
+            alt={name}
+            fill
+            sizes={sizes}
+            referrerPolicy="no-referrer"
+            onLoad={() => setLoadedUrl(resolvedUrl)}
+            onError={() => setFailedUrl(resolvedUrl)}
+            className={cn(
+              'object-contain object-center transition-all duration-300',
+              isImageLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100',
+              isOutOfStock && 'grayscale-[35%] opacity-80',
+              className
+            )}
+          />
+        </div>
+      </div>
     );
   }
 

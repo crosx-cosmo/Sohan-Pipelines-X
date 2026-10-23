@@ -10,6 +10,7 @@ export interface CartItem {
   category?: string | null;
   selling_price: number | null;
   stock: number | null;
+  image_path?: string | null;
   image_url: string | null;
   quantity: number;
 }

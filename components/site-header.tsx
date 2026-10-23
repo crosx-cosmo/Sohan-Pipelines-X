@@ -40,7 +40,7 @@ const navLinks = [
   { href: '/reviews', label: 'Reviews', icon: Star, description: 'Verified Client Feedback & Ratings' },
   { href: '/service-areas', label: 'Service Areas', icon: MapPin, description: 'Paschim & Purba Medinipur Coverage' },
   { href: '/find-booking', label: 'Track Booking', icon: Search, description: 'Live Status & Job Verification' },
-  { href: '/contact', label: 'Contact', icon: MessageSquare, description: '24/7 Emergency Dispatch Line' },
+  { href: '/contact', label: 'Contact', icon: MessageSquare, description: 'Direct Dispatch & Support Desk' },
   { href: '/faq', label: 'Help & FAQ', icon: HelpCircle, description: 'Warranty, Rates & Cleanout Procedures' },
   { href: '/spare-parts', label: 'Spare Parts', icon: Package, description: 'Genuine Hardware & Wholesale Counter' },
 ];
@@ -109,29 +109,33 @@ export function SiteHeader() {
             : 'bg-background/75 dark:bg-background/65 backdrop-blur-md border-b border-border/40'
         )}
       >
-        {/* Top Emergency Utility Strip (Desktop Only) */}
-        <div className="hidden md:block border-b border-border/40 bg-muted/30 py-1 px-4 sm:px-6 lg:px-8 text-[11px] text-muted-foreground">
-          <div className="mx-auto flex max-w-7xl items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1.5 font-medium text-foreground">
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-                <span>24/7 Rapid Emergency Response Active</span>
+        {/* Top Utility Strip (Desktop Only) */}
+        <div className="hidden md:block border-b border-border/50 bg-muted/30 py-1.5 px-4 sm:px-6 lg:px-8 text-[11px] text-muted-foreground">
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="inline-flex items-center gap-1.5 font-medium text-foreground whitespace-nowrap">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>Plumbing Engineering &amp; Authorized Spare Parts</span>
               </span>
               <span className="text-border" aria-hidden="true">·</span>
-              <span>Bahardaltitia, Keshrambha, Dantan (PIN 721451)</span>
+              <span className="truncate">
+                Bahardaltitia, Keshrambha, Dantan (PIN {businessInfo.pincode})
+              </span>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="flex items-center gap-1 font-medium">
+            <div className="flex items-center gap-3 shrink-0">
+              <span className="inline-flex items-center gap-1 font-medium whitespace-nowrap">
                 <Clock className="h-3 w-3 text-primary" />
-                <span>Typical On-Site ETA: 15–30 Mins</span>
+                <span>
+                  {businessInfo.hoursDays}: {businessInfo.hours}
+                </span>
               </span>
               <span className="text-border" aria-hidden="true">·</span>
               <a
                 href={`tel:${businessInfo.phone}`}
-                className="font-bold text-foreground hover:text-primary transition-colors flex items-center gap-1"
+                className="font-semibold text-foreground hover:text-primary transition-colors inline-flex items-center gap-1 whitespace-nowrap"
               >
                 <Phone className="h-3 w-3 text-primary" />
-                <span>Emergency: {businessInfo.phoneDisplay}</span>
+                <span>{businessInfo.phoneDisplay}</span>
               </a>
             </div>
           </div>
@@ -140,14 +144,14 @@ export function SiteHeader() {
         {/* Main Navigation Bar */}
         <div
           className={cn(
-            'mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 transition-[height] duration-200',
-            scrolled ? 'h-14 sm:h-15' : 'h-16 sm:h-18'
+            'mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 transition-[height] duration-200',
+            scrolled ? 'h-14 sm:h-15' : 'h-16'
           )}
         >
           {/* Brand Logo & Wordmark */}
           <Link
             href="/"
-            className="flex items-center gap-2.5 sm:gap-3 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl p-1 -m-1"
+            className="flex items-center gap-2.5 shrink-0 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl p-1 -m-1"
           >
             <div className="shrink-0 transition-transform duration-200 group-hover:scale-105 active:scale-95">
               <BrandLogo size="md" />
@@ -162,8 +166,11 @@ export function SiteHeader() {
             </div>
           </Link>
 
-          {/* Desktop Navigation Links with Animated Pill */}
-          <nav className="hidden lg:flex items-center gap-1 p-1 rounded-full bg-muted/50 border border-border/60">
+          {/* Desktop Navigation Links */}
+          <nav
+            aria-label="Primary Navigation"
+            className="hidden lg:flex items-center gap-0.5 xl:gap-1 p-1 rounded-xl bg-muted/40 border border-border/60"
+          >
             {navLinks.map((link) => {
               const active = isActive(link.href);
               return (
@@ -171,7 +178,7 @@ export function SiteHeader() {
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    'relative px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-full transition-colors whitespace-nowrap',
+                    'relative px-2.5 xl:px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap shrink-0',
                     active
                       ? 'text-foreground font-semibold'
                       : 'text-muted-foreground hover:text-foreground'
@@ -181,7 +188,7 @@ export function SiteHeader() {
                     <motion.span
                       layoutId="navActivePill"
                       transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-                      className="absolute inset-0 rounded-full bg-card shadow-xs border border-border/80 -z-10"
+                      className="absolute inset-0 rounded-lg bg-card shadow-2xs border border-border/80 -z-10"
                     />
                   )}
                   {link.label}
@@ -190,33 +197,20 @@ export function SiteHeader() {
             })}
           </nav>
 
-          {/* Action Zone: Theme Toggle + Book CTA + Mobile Hamburger Trigger */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Action Zone: Cart + Theme Toggle + Book CTA + Mobile Hamburger Trigger */}
+          <div className="flex items-center gap-2 shrink-0">
             <CartTriggerButton />
             <ThemeToggle />
-
-            {/* Desktop Quick Hotline CTA */}
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="hidden xl:inline-flex font-semibold text-xs h-9 px-3.5 rounded-xl border-border/80 hover:bg-muted/60"
-            >
-              <a href={`tel:${businessInfo.phone}`}>
-                <Phone className="mr-1.5 h-3.5 w-3.5 text-primary" />
-                <span>{businessInfo.phoneDisplay}</span>
-              </a>
-            </Button>
 
             {/* Desktop Primary CTA Button */}
             <Button
               asChild
               size="sm"
-              className="hidden sm:inline-flex font-semibold text-xs h-9 px-4.5 rounded-xl shadow-sm shadow-primary/20 group"
+              className="hidden sm:inline-flex font-semibold text-xs h-9 px-4 rounded-xl shadow-xs group whitespace-nowrap shrink-0"
             >
               <Link href="/book">
                 <span>Book Service</span>
-                <ArrowRight className="ml-1.5 h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+                <ArrowRight className="ml-1.5 h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
               </Link>
             </Button>
 

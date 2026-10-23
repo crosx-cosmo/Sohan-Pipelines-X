@@ -128,7 +128,7 @@ export function PageHeader({
                 On-Duty Engineering Desk
               </span>
               <span className="font-mono text-[11px] text-primary font-bold">
-                15–30m ETA
+                Same-Day Dispatch
               </span>
             </div>
 
