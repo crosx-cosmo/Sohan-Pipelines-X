@@ -11,6 +11,8 @@ import {
   Clock,
   Search,
   RefreshCw,
+  ShieldCheck,
+  CheckCircle2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -119,39 +121,39 @@ export function HomeAreasPreview() {
           className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10"
         >
           <div className="max-w-2xl">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.065em] text-primary mb-2.5">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold uppercase tracking-[0.065em] text-primary mb-2.5">
               <span>05. Regional Coverage</span>
               <span aria-hidden="true">·</span>
               <span className="text-muted-foreground font-medium">
                 Paschim &amp; Purba Medinipur
               </span>
             </div>
-            <h2 className="font-display text-3xl sm:text-4xl lg:text-4xl font-bold tracking-tight text-foreground text-balance">
+            <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground text-balance">
               Service Areas &amp; Regional Dispatch Hubs
             </h2>
-            <p className="mt-3 text-base text-muted-foreground leading-relaxed text-pretty font-normal">
+            <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed text-pretty font-normal">
               Operating from {businessInfo.addressShort} (PIN{' '}
               {businessInfo.pincode}), our mobile plumbing units serve key towns
               and blocks across Paschim Medinipur and Purba Medinipur.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <div className="grid grid-cols-2 sm:flex items-center gap-2.5 w-full sm:w-auto shrink-0">
             <Button
               asChild
               variant="outline"
               size="sm"
-              className="font-semibold text-xs h-10 px-4 rounded-xl border-border/80"
+              className="font-semibold text-xs h-10 px-4 rounded-xl border-border/80 w-full sm:w-auto justify-center"
             >
               <Link href="/service-areas">
-                View All Service Areas
-                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                View All Areas
+                <ArrowRight className="ml-1.5 h-3.5 w-3.5 shrink-0" />
               </Link>
             </Button>
             <Button
               asChild
               size="sm"
-              className="font-semibold text-xs h-10 px-4 rounded-xl shadow-xs"
+              className="font-semibold text-xs h-10 px-4 rounded-xl shadow-xs w-full sm:w-auto justify-center"
             >
               <Link href="/book">Book In Your Area</Link>
             </Button>
@@ -176,12 +178,12 @@ export function HomeAreasPreview() {
                 placeholder="Check your locality or PIN code (e.g. Dantan, Kharagpur, Contai, 721451)..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="pl-10 h-11 text-xs sm:text-sm bg-muted/30 border-border/60 rounded-xl"
+                className="pl-10 h-11 text-sm bg-muted/30 border-border/60 rounded-xl"
               />
             </div>
             <Button
               type="submit"
-              className="w-full sm:w-auto h-11 px-6 text-xs sm:text-sm font-semibold rounded-xl shrink-0"
+              className="w-full sm:w-auto h-11 px-6 text-sm font-semibold rounded-xl shrink-0 justify-center"
             >
               Check Coverage
             </Button>
@@ -238,7 +240,7 @@ export function HomeAreasPreview() {
 
         {/* Concise District Summary Grid */}
         {!loading && !error && areas.length > 0 && (
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-6 items-stretch">
             {Object.entries(districtGroups).map(([district, districtAreas]) => {
               const previewLocalities = districtAreas.slice(0, 6);
               const remainingCount = Math.max(
@@ -253,16 +255,16 @@ export function HomeAreasPreview() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-                  className="rounded-2xl border border-border/80 bg-card p-6 sm:p-7 shadow-crisp-xs flex flex-col justify-between transition-all duration-200 hover:border-primary/50 hover:shadow-crisp-md"
+                  className="h-full rounded-2xl border border-border/80 bg-card p-6 sm:p-7 shadow-crisp-xs flex flex-col justify-between transition-all duration-200 hover:border-primary/50 hover:shadow-crisp-md"
                 >
                   <div>
-                    <div className="flex items-center justify-between pb-4 mb-4 border-b border-border/60">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <div className="flex items-center justify-between gap-2 pb-4 mb-4 border-b border-border/60">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
                           <MapPin className="h-5 w-5" />
                         </div>
-                        <div>
-                          <h3 className="font-display font-bold text-base text-foreground">
+                        <div className="min-w-0">
+                          <h3 className="font-display font-bold text-base text-foreground truncate">
                             {district}
                           </h3>
                           <p className="text-xs text-muted-foreground">
@@ -274,7 +276,7 @@ export function HomeAreasPreview() {
                           </p>
                         </div>
                       </div>
-                      <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                      <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 shrink-0">
                         Active Zone
                       </span>
                     </div>
@@ -284,20 +286,22 @@ export function HomeAreasPreview() {
                       diagnostics, sanitary fittings, and spare parts supply:
                     </p>
 
-                    <div className="flex flex-wrap gap-2 mb-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-6">
                       {previewLocalities.map((area, idx) => (
                         <Link
                           key={`${area.id || area.locality}-${idx}`}
                           href={`/book?area=${encodeURIComponent(
                             area.locality
                           )}`}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-muted/60 text-foreground border border-border/50 hover:border-primary/40 hover:text-primary transition-colors"
+                          className="inline-flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-muted/50 text-foreground border border-border/70 hover:border-primary/50 hover:text-primary transition-colors"
                         >
-                          <MapPin className="h-3 w-3 text-primary shrink-0" />
-                          <span>{area.locality}</span>
+                          <span className="inline-flex items-center gap-2 min-w-0">
+                            <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+                            <span className="truncate">{area.locality}</span>
+                          </span>
                           {area.pincode && (
-                            <span className="text-[10px] text-muted-foreground font-mono">
-                              ({area.pincode})
+                            <span className="text-[10px] text-muted-foreground font-mono shrink-0">
+                              PIN {area.pincode}
                             </span>
                           )}
                         </Link>
@@ -305,25 +309,25 @@ export function HomeAreasPreview() {
                       {remainingCount > 0 && (
                         <Link
                           href="/service-areas"
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15 transition-colors"
+                          className="inline-flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15 transition-colors"
                         >
-                          <span>+{remainingCount} more</span>
-                          <ArrowRight className="h-3 w-3" />
+                          <span>+{remainingCount} more hubs</span>
+                          <ArrowRight className="h-3.5 w-3.5 shrink-0" />
                         </Link>
                       )}
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-border/60 flex items-center justify-between text-xs">
+                  <div className="pt-4 border-t border-border/60 flex flex-wrap items-center justify-between gap-2 text-xs">
                     <span className="text-muted-foreground flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5 text-primary" />
+                      <Clock className="h-3.5 w-3.5 text-primary shrink-0" />
                       Same-Day &amp; Scheduled Visits
                     </span>
                     <Button
                       asChild
                       size="sm"
                       variant="ghost"
-                      className="text-xs font-semibold h-8 text-primary"
+                      className="text-xs font-semibold h-8 px-2 text-primary"
                     >
                       <Link href="/service-areas">
                         Explore District Coverage &rarr;
@@ -333,13 +337,109 @@ export function HomeAreasPreview() {
                 </motion.div>
               );
             })}
+
+            {/* Companion Base Workshop & Regional Dispatch Card when 1 District Group is returned */}
+            {Object.keys(districtGroups).length === 1 && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.28, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
+                className="h-full rounded-2xl border border-border/80 bg-card p-6 sm:p-7 shadow-crisp-xs flex flex-col justify-between transition-all duration-200 hover:border-primary/50 hover:shadow-crisp-md"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 pb-4 mb-4 border-b border-border/60">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
+                        <ShieldCheck className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-display font-bold text-base text-foreground truncate">
+                          Base Workshop &amp; Dispatch HQ
+                        </h3>
+                        <p className="text-xs text-muted-foreground truncate">
+                          Bahardaltitia, Keshrambha, Dantan
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20 shrink-0">
+                      PIN {businessInfo.pincode}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+                    Central engineering depot and genuine spare parts counter serving residential and commercial pipelines across West &amp; East Medinipur:
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-6">
+                    <div className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl text-xs bg-muted/50 border border-border/70">
+                      <span className="inline-flex items-center gap-2 font-semibold text-foreground truncate">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                        <span className="truncate">Rapid Mobile Units</span>
+                      </span>
+                      <span className="text-[10px] font-mono text-muted-foreground shrink-0">
+                        On-Call
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl text-xs bg-muted/50 border border-border/70">
+                      <span className="inline-flex items-center gap-2 font-semibold text-foreground truncate">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                        <span className="truncate">Genuine Spare Parts</span>
+                      </span>
+                      <span className="text-[10px] font-mono text-muted-foreground shrink-0">
+                        In Stock
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl text-xs bg-muted/50 border border-border/70">
+                      <span className="inline-flex items-center gap-2 font-semibold text-foreground truncate">
+                        <Clock className="h-3.5 w-3.5 text-primary shrink-0" />
+                        <span className="truncate">{businessInfo.hours}</span>
+                      </span>
+                      <span className="text-[10px] font-mono text-muted-foreground shrink-0">
+                        Mon–Sat
+                      </span>
+                    </div>
+
+                    <a
+                      href={`tel:${businessInfo.phone}`}
+                      className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/15 transition-colors"
+                    >
+                      <span className="inline-flex items-center gap-2 truncate">
+                        <Phone className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{businessInfo.phoneDisplay}</span>
+                      </span>
+                      <span className="text-[10px] font-mono shrink-0">Call</span>
+                    </a>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-border/60 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+                    Keshrambha · Dantan PS
+                  </span>
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="ghost"
+                    className="text-xs font-semibold h-8 px-2 text-primary"
+                  >
+                    <Link href="/book">
+                      Schedule Technician Visit &rarr;
+                    </Link>
+                  </Button>
+                </div>
+              </motion.div>
+            )}
           </div>
         )}
 
         {/* Coverage Assistance & View All Service Areas Banner */}
-        <div className="mt-8 rounded-2xl border border-border/70 bg-card p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs shadow-crisp-xs">
-          <div className="flex items-center gap-3 text-center sm:text-left">
-            <div className="hidden sm:flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
+        <div className="mt-8 rounded-2xl border border-border/70 bg-card p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs shadow-crisp-xs">
+          <div className="flex items-start sm:items-center gap-3 text-left">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
               <Phone className="h-4 w-4" />
             </div>
             <div>
@@ -359,11 +459,11 @@ export function HomeAreasPreview() {
             asChild
             variant="outline"
             size="sm"
-            className="font-semibold text-xs h-9.5 px-4 rounded-xl border-primary/30 text-primary hover:bg-primary/5 shrink-0"
+            className="font-semibold text-xs h-9.5 px-4 rounded-xl border-primary/30 text-primary hover:bg-primary/5 w-full sm:w-auto justify-center shrink-0"
           >
             <Link href="/service-areas">
               View All Service Areas
-              <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+              <ArrowRight className="ml-1.5 h-3.5 w-3.5 shrink-0" />
             </Link>
           </Button>
         </div>

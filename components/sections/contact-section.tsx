@@ -139,9 +139,9 @@ export function ContactSection() {
   return (
     <section className="py-20 lg:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
           {/* Left Column: Direct Communication Channels (col-span-5) */}
-          <div className="lg:col-span-5 space-y-6">
+          <div className="lg:col-span-5 min-w-0 space-y-6">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.065em] text-primary">
               <span>Direct Communication</span>
               <span aria-hidden="true">·</span>
@@ -325,9 +325,9 @@ export function ContactSection() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+                <div className="flex flex-wrap items-center gap-2 self-start sm:self-center">
                   {districts.length > 1 && (
-                    <div className="inline-flex items-center rounded-xl border border-border/80 bg-muted/40 p-1">
+                    <div className="inline-flex flex-wrap items-center rounded-xl border border-border/80 bg-muted/40 p-1 gap-0.5">
                       <button
                         type="button"
                         onClick={() => setSelectedDistrict('All')}

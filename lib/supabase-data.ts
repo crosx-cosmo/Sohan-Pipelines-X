@@ -112,9 +112,6 @@ let inflightServicesPromise: Promise<{ data: DbService[]; error: string | null }
 let areasCache: CacheEntry<DbServiceArea[]> | null = null;
 let inflightAreasPromise: Promise<{ data: DbServiceArea[]; error: string | null }> | null = null;
 
-let reviewsCache: CacheEntry<DbReview[]> | null = null;
-let inflightReviewsPromise: Promise<{ data: DbReview[]; error: string | null }> | null = null;
-
 let sparePartsCache: CacheEntry<DbSparePart[]> | null = null;
 let inflightSparePartsPromise: Promise<{
   data: DbSparePart[];
@@ -133,13 +130,6 @@ export function getCachedServices(): DbService[] | null {
 export function getCachedServiceAreas(): DbServiceArea[] | null {
   if (areasCache && Date.now() - areasCache.timestamp < CACHE_TTL_MS) {
     return areasCache.data;
-  }
-  return null;
-}
-
-export function getCachedReviews(): DbReview[] | null {
-  if (reviewsCache && Date.now() - reviewsCache.timestamp < CACHE_TTL_MS) {
-    return reviewsCache.data;
   }
   return null;
 }
@@ -541,60 +531,6 @@ export async function fetchLiveServiceAreas(options: { forceRefresh?: boolean } 
   })();
 
   return inflightAreasPromise;
-}
-
-export interface DbReview {
-  id: string;
-  customer_name: string;
-  area?: string | null;
-  rating: number;
-  comment: string;
-  service_name?: string | null;
-  verified?: boolean;
-  created_at: string;
-}
-
-export async function fetchLiveReviews(options: { forceRefresh?: boolean } = {}): Promise<{ data: DbReview[]; error: string | null }> {
-  const { forceRefresh = false } = options;
-
-  if (!forceRefresh && reviewsCache && reviewsCache.data.length > 0 && Date.now() - reviewsCache.timestamp < CACHE_TTL_MS) {
-    return { data: reviewsCache.data, error: null };
-  }
-
-  if (inflightReviewsPromise) {
-    return inflightReviewsPromise;
-  }
-
-  inflightReviewsPromise = (async () => {
-    try {
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        return { data: reviewsCache?.data ?? [], error: error.message };
-      }
-
-      const freshData = (data as DbReview[]) ?? [];
-      if (freshData.length > 0) {
-        reviewsCache = {
-          data: freshData,
-          timestamp: Date.now(),
-        };
-      }
-      return { data: freshData, error: null };
-    } catch (err) {
-      return {
-        data: reviewsCache?.data ?? [],
-        error: err instanceof Error ? err.message : 'Failed to connect to Supabase reviews table',
-      };
-    } finally {
-      inflightReviewsPromise = null;
-    }
-  })();
-
-  return inflightReviewsPromise;
 }
 
 /**

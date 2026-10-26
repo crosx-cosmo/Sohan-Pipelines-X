@@ -12,8 +12,6 @@ import {
   Wrench,
   Sparkles,
   RefreshCw,
-  AlertTriangle,
-  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +25,7 @@ import {
 } from '@/lib/supabase-data';
 import { businessInfo } from '@/lib/business-info';
 import { cn } from '@/lib/utils';
-import { HowOurServiceWorks } from '@/components/how-our-service-works';
+import { HowOurServiceWorks } from '@/components/service-estimator';
 
 type CategoryFilter = 'all' | 'residential' | 'commercial' | 'emergency' | 'installation' | 'maintenance';
 

@@ -291,31 +291,34 @@ export function ServiceAreasSection() {
         )}
 
         {/* Central Operations Depot Callout */}
-        <div className="rounded-2xl border border-border/70 bg-card/60 backdrop-blur-md p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xs">
-          <div className="space-y-2 text-center md:text-left">
-            <div className="flex items-center justify-center md:justify-start gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-              <ShieldCheck className="h-4 w-4" />
-              <span>Base Operations &amp; Workshop</span>
+        <div className="rounded-2xl border border-border/80 bg-card p-5 sm:p-7 lg:p-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6 shadow-crisp-xs">
+          <div className="space-y-2.5 text-left max-w-2xl">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+              <ShieldCheck className="h-4 w-4 shrink-0" />
+              <span>Base Operations &amp; Workshop HQ</span>
             </div>
-            <h3 className="font-display text-lg sm:text-xl font-bold text-foreground">
-              {businessInfo.address}
+            <h3 className="font-display text-lg sm:text-xl font-bold text-foreground leading-snug">
+              Bahardaltitia, Keshrambha, Dantan · West Medinipur (PIN {businessInfo.pincode})
             </h3>
-            <p className="text-xs sm:text-sm text-muted-foreground max-w-xl">
-              Equipped with heavy solvent weld inventory, motorized drain cleanout machines, acoustic leak detectors, and copper pipe benders.
+            <p className="text-xs text-muted-foreground font-mono">
+              {businessInfo.address}
+            </p>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              Equipped with heavy solvent weld inventory, motorized drain cleanout machines, acoustic leak detectors, and copper pipe benders for rapid dispatch across South Bengal.
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full sm:w-auto">
-            <Button asChild size="lg" className="w-full sm:w-auto font-semibold text-xs sm:text-sm h-11 px-6 shadow-md">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex items-center gap-3 shrink-0 w-full lg:w-auto">
+            <Button asChild size="lg" className="w-full lg:w-auto font-semibold text-xs sm:text-sm h-11 px-6 rounded-xl shadow-xs justify-center">
               <Link href="/book">
                 Book Visit in Your Area
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto font-semibold text-xs sm:text-sm h-11 px-6">
+            <Button asChild variant="outline" size="lg" className="w-full lg:w-auto font-semibold text-xs sm:text-sm h-11 px-6 rounded-xl justify-center">
               <a href={`tel:${businessInfo.phone}`}>
-                <Phone className="mr-2 h-4 w-4 text-primary" />
-                Call Hotline
+                <Phone className="mr-2 h-4 w-4 text-primary shrink-0" />
+                Call {businessInfo.phoneDisplay}
               </a>
             </Button>
           </div>

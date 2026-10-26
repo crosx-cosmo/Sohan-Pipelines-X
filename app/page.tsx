@@ -41,7 +41,7 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <main className="flex-1">
+    <main className="flex-1 w-full min-w-0 max-w-full overflow-x-hidden">
       <HeroSection />
       <HomeServicesPreview />
       <HomeSparePartsPreview />

@@ -583,13 +583,13 @@ export function BrandPartnersMarquee() {
   );
 
   return (
-    <div className="mt-12 lg:mt-14 pt-10 border-t border-border/70">
-      <div className="rounded-3xl border border-border/80 bg-card/95 dark:bg-card/90 backdrop-blur-md p-5 sm:p-7 shadow-crisp-md space-y-6">
+    <div className="mt-10 sm:mt-12 lg:mt-14 pt-8 sm:pt-10 border-t border-border/70 w-full max-w-full min-w-0 overflow-hidden">
+      <div className="w-full max-w-full min-w-0 overflow-hidden rounded-3xl border border-border/80 bg-card/95 dark:bg-card/90 backdrop-blur-md p-4 sm:p-7 shadow-crisp-md space-y-5 sm:space-y-6">
         {/* Top Editorial Header & Category Filter Controls */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-border/60">
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-primary">
-              <Award className="h-3.5 w-3.5 shrink-0" />
+              <Award className="h-3.5 w-3.5" />
               <span className="uppercase tracking-[0.065em]">
                 Authorized Material &amp; Brand Sponsors
               </span>
@@ -606,7 +606,7 @@ export function BrandPartnersMarquee() {
           </div>
 
           {/* Interactive Category Filter Buttons + Pause/Play Toggle */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center justify-between sm:justify-start gap-2 w-full lg:w-auto">
             <div className="inline-flex flex-wrap items-center rounded-xl border border-border/80 bg-muted/40 p-1 gap-1">
               {(
                 [
@@ -622,7 +622,7 @@ export function BrandPartnersMarquee() {
                   type="button"
                   onClick={() => setSelectedCategory(cat)}
                   className={cn(
-                    'px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap',
+                    'px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap',
                     selectedCategory === cat
                       ? 'bg-primary text-primary-foreground shadow-2xs'
                       : 'text-muted-foreground hover:text-foreground'
@@ -636,7 +636,7 @@ export function BrandPartnersMarquee() {
             <button
               type="button"
               onClick={() => setIsPaused((prev) => !prev)}
-              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-xl border border-border/80 bg-background hover:bg-muted/60 text-xs font-semibold text-foreground transition-colors cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-xl border border-border/80 bg-background hover:bg-muted/60 text-xs font-semibold text-foreground transition-colors cursor-pointer whitespace-nowrap shrink-0"
               aria-label={
                 isPaused ? 'Resume brand logo motion' : 'Pause brand logo motion'
               }
@@ -690,7 +690,7 @@ export function BrandPartnersMarquee() {
                 <motion.button
                   key={`${brand.id}-${idx}`}
                   type="button"
-                  whileHover={{ y: -3, scale: 1.015 }}
+                  whileHover={{ y: -3, scale: 1.01 }}
                   whileTap={{ scale: 0.985 }}
                   onClick={() => setActiveBrand(brand)}
                   className={cn(
@@ -717,7 +717,7 @@ export function BrandPartnersMarquee() {
 
                   {/* Bottom Brand Metadata */}
                   <div className="pt-3 space-y-1">
-                    <div className="flex items-center justify-between text-[11px]">
+                    <div className="flex items-center justify-between gap-1 text-[11px]">
                       <span className="font-semibold text-foreground truncate">
                         {brand.displaySubname || brand.name}
                       </span>
@@ -745,13 +745,13 @@ export function BrandPartnersMarquee() {
             transition={{ duration: 0.18 }}
             className="rounded-2xl border border-border/70 bg-muted/25 p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4"
           >
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 min-w-0">
-              <div className="px-3.5 py-2 rounded-xl bg-card border border-border/80 shrink-0 self-start sm:self-center">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3.5 sm:gap-4 min-w-0">
+              <div className="px-3.5 py-2 rounded-xl bg-background border border-border/80 shrink-0 self-start sm:self-center text-foreground">
                 <BrandOfficialLogoSvg brand={activeBrand} />
               </div>
 
               <div className="min-w-0 space-y-1">
-                <div className="flex flex-wrap items-center gap-2 text-xs">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
                   <span className="font-bold text-foreground">
                     {activeBrand.name} Official Specification
                   </span>
@@ -768,7 +768,7 @@ export function BrandPartnersMarquee() {
                     {activeBrand.tagline}
                   </span>
                 </div>
-                <p className="text-xs sm:text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   <strong className="text-foreground font-semibold">
                     On-Site Deployment:
                   </strong>{' '}
@@ -777,21 +777,21 @@ export function BrandPartnersMarquee() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <div className="grid grid-cols-1 sm:flex items-center gap-2.5 w-full lg:w-auto shrink-0">
               <Link
                 href="/spare-parts"
-                className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl border border-border/80 bg-card hover:border-primary/50 text-xs font-semibold text-foreground transition-colors whitespace-nowrap"
+                className="inline-flex items-center justify-center gap-1.5 h-9.5 px-3.5 rounded-xl border border-border/80 bg-card hover:border-primary/50 text-xs font-semibold text-foreground transition-colors whitespace-nowrap w-full sm:w-auto"
               >
-                <Package className="h-3.5 w-3.5 text-primary" />
+                <Package className="h-3.5 w-3.5 text-primary shrink-0" />
                 <span>Check Spare Parts</span>
               </Link>
               <Link
                 href="/book"
-                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold transition-colors whitespace-nowrap shadow-2xs"
+                className="inline-flex items-center justify-center gap-1.5 h-9.5 px-4 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold transition-colors whitespace-nowrap shadow-2xs w-full sm:w-auto"
               >
-                <ShieldCheck className="h-3.5 w-3.5" />
+                <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
                 <span>Book {activeBrand.name} Installation</span>
-                <ArrowRight className="h-3.5 w-3.5" />
+                <ArrowRight className="h-3.5 w-3.5 shrink-0" />
               </Link>
             </div>
           </motion.div>

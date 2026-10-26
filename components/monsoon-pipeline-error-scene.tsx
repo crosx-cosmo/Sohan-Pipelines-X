@@ -2,10 +2,14 @@
 
 import * as React from 'react';
 
-export type WeatherMood = 'monsoon-night' | 'dusk-drizzle' | 'storm-daylight';
+export type WeatherMood =
+  | 'clear-daylight'
+  | 'storm-daylight'
+  | 'dusk-drizzle'
+  | 'monsoon-night';
 
 interface MonsoonPipelineErrorSceneProps {
-  mood: WeatherMood;
+  mood?: WeatherMood;
   isPaused?: boolean;
   errorCode?: string;
 }
@@ -80,21 +84,38 @@ const MOOD_PALETTES: Record<
     rainRgb: string;
     rainIntensity: number;
     windX: number;
+    isDaylight?: boolean;
   }
 > = {
-  'monsoon-night': {
-    skyTop: '#040814',
-    skyMid: '#0b1528',
-    skyHorizon: '#162642',
-    roadTop: '#0b1322',
-    roadBottom: '#04070f',
-    buildingDark: '#070d19',
-    buildingMid: '#0c1629',
-    windowWarm: 'rgba(251, 191, 36, 0.55)',
-    lampGlow: 'rgba(56, 189, 248, 0.24)',
-    rainRgb: '186, 230, 253',
-    rainIntensity: 1,
-    windX: -2.4,
+  'clear-daylight': {
+    skyTop: '#bae6fd',
+    skyMid: '#e0f2fe',
+    skyHorizon: '#f8fafc',
+    roadTop: '#475569',
+    roadBottom: '#334155',
+    buildingDark: '#94a3b8',
+    buildingMid: '#cbd5e1',
+    windowWarm: 'rgba(255, 255, 255, 0.78)',
+    lampGlow: 'rgba(250, 204, 21, 0.22)',
+    rainRgb: '2, 132, 199',
+    rainIntensity: 0.45,
+    windX: -0.9,
+    isDaylight: true,
+  },
+  'storm-daylight': {
+    skyTop: '#7dd3fc',
+    skyMid: '#bae6fd',
+    skyHorizon: '#e2e8f0',
+    roadTop: '#334155',
+    roadBottom: '#1e293b',
+    buildingDark: '#64748b',
+    buildingMid: '#94a3b8',
+    windowWarm: 'rgba(254, 249, 195, 0.75)',
+    lampGlow: 'rgba(56, 189, 248, 0.25)',
+    rainRgb: '14, 116, 144',
+    rainIntensity: 0.75,
+    windX: -1.6,
+    isDaylight: true,
   },
   'dusk-drizzle': {
     skyTop: '#0d1326',
@@ -109,25 +130,27 @@ const MOOD_PALETTES: Record<
     rainRgb: '224, 242, 254',
     rainIntensity: 0.65,
     windX: -1.4,
+    isDaylight: false,
   },
-  'storm-daylight': {
-    skyTop: '#111c2d',
-    skyMid: '#1e3048',
-    skyHorizon: '#334b68',
-    roadTop: '#182638',
-    roadBottom: '#0b131e',
-    buildingDark: '#101b29',
-    buildingMid: '#18283c',
-    windowWarm: 'rgba(254, 240, 138, 0.45)',
-    lampGlow: 'rgba(125, 211, 252, 0.22)',
-    rainRgb: '226, 232, 240',
-    rainIntensity: 0.85,
-    windX: -2.0,
+  'monsoon-night': {
+    skyTop: '#040814',
+    skyMid: '#0b1528',
+    skyHorizon: '#162642',
+    roadTop: '#0b1322',
+    roadBottom: '#04070f',
+    buildingDark: '#070d19',
+    buildingMid: '#0c1629',
+    windowWarm: 'rgba(251, 191, 36, 0.55)',
+    lampGlow: 'rgba(56, 189, 248, 0.24)',
+    rainRgb: '186, 230, 253',
+    rainIntensity: 1,
+    windX: -2.4,
+    isDaylight: false,
   },
 };
 
 export function MonsoonPipelineErrorScene({
-  mood,
+  mood = 'clear-daylight',
   isPaused = false,
   errorCode = '404',
 }: MonsoonPipelineErrorSceneProps) {
@@ -748,7 +771,7 @@ export function MonsoonPipelineErrorScene({
       const horizonY = height * 0.64;
       const pxOffset = (pointerRef.current.x - 0.5) * 18;
 
-      // 1. Atmospheric Monsoon Sky Gradient
+      // 1. Atmospheric Sky Gradient
       const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
       skyGrad.addColorStop(0, palette.skyTop);
       skyGrad.addColorStop(0.55, palette.skyMid);
@@ -756,11 +779,24 @@ export function MonsoonPipelineErrorScene({
       ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, width, horizonY + 2);
 
-      // Subtle distant storm sheet-lightning pulse
-      const lightningCycle = Math.sin(time * 0.7) * Math.sin(time * 4.3);
-      if (lightningCycle > 0.92) {
-        ctx.fillStyle = 'rgba(186, 230, 253, 0.06)';
-        ctx.fillRect(0, 0, width, horizonY);
+      // Daylight Sun Halo in Day Mode vs Distant Storm Lightning in Night Mode
+      if (palette.isDaylight) {
+        const sunX = width * 0.24 + pxOffset * 0.25;
+        const sunY = height * 0.18;
+        const sunGlow = ctx.createRadialGradient(sunX, sunY, 8, sunX, sunY, 180);
+        sunGlow.addColorStop(0, 'rgba(255, 255, 255, 0.92)');
+        sunGlow.addColorStop(0.25, 'rgba(254, 240, 138, 0.55)');
+        sunGlow.addColorStop(1, 'rgba(254, 240, 138, 0)');
+        ctx.fillStyle = sunGlow;
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, 180, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        const lightningCycle = Math.sin(time * 0.7) * Math.sin(time * 4.3);
+        if (lightningCycle > 0.92) {
+          ctx.fillStyle = 'rgba(186, 230, 253, 0.06)';
+          ctx.fillRect(0, 0, width, horizonY);
+        }
       }
 
       // 2. Architectural Urban Skyline Silhouette & Distant Water Towers

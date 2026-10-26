@@ -41,6 +41,7 @@ export function CartDrawer() {
   const [deliveryArea, setDeliveryArea] = React.useState('');
   const [additionalNotes, setAdditionalNotes] = React.useState('');
   const [showCustomerFields, setShowCustomerFields] = React.useState(false);
+  const [showMessagePreview, setShowMessagePreview] = React.useState(false);
   const [copiedSummary, setCopiedSummary] = React.useState(false);
 
   // Close on escape key
@@ -75,15 +76,19 @@ export function CartDrawer() {
     [customerName, deliveryArea, additionalNotes]
   );
 
+  const formattedWhatsAppMessage = React.useMemo(
+    () => buildCartWhatsAppMessage(items, customerInfo),
+    [items, customerInfo]
+  );
+
   const checkoutWhatsAppUrl = React.useMemo(
     () => getCartWhatsAppUrl(items, customerInfo),
     [items, customerInfo]
   );
 
   const handleCopySummary = async () => {
-    const message = buildCartWhatsAppMessage(items, customerInfo);
     try {
-      await navigator.clipboard.writeText(message);
+      await navigator.clipboard.writeText(formattedWhatsAppMessage);
       setCopiedSummary(true);
       toast.success('Order summary copied to clipboard', {
         description: 'You can paste this list directly into WhatsApp or SMS.',
@@ -367,6 +372,22 @@ export function CartDrawer() {
                       * Some items have wholesale rates confirmed upon stock lookup.
                     </p>
                   )}
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowMessagePreview((prev) => !prev)}
+                      className="text-[11px] font-semibold text-primary hover:underline cursor-pointer"
+                    >
+                      {showMessagePreview
+                        ? 'Hide WhatsApp Message Preview'
+                        : 'Preview Prefilled WhatsApp Message'}
+                    </button>
+                    {showMessagePreview && (
+                      <pre className="mt-1.5 max-h-32 overflow-y-auto rounded-xl border border-border/70 bg-muted/40 p-2.5 font-mono text-[10px] leading-relaxed text-foreground whitespace-pre-wrap">
+                        {formattedWhatsAppMessage}
+                      </pre>
+                    )}
+                  </div>
                 </div>
 
                 {/* Primary WhatsApp Checkout Button (Native Anchor) */}

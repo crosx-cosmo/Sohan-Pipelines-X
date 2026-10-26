@@ -65,19 +65,19 @@ export function PageHeader({
         />
       )}
       <div className="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(#0284c7_1px,transparent_1px)] [background-size:24px_24px]" />
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+      <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-9 sm:py-11 lg:py-14">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
-          <div className="max-w-3xl">
+          <div className="max-w-3xl min-w-0">
             {/* Breadcrumb Navigation for SEO & UX */}
             {breadcrumbPath && (
               <nav
                 aria-label="Breadcrumb"
-                className="flex items-center gap-1.5 text-xs text-muted-foreground mb-4"
+                className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3.5"
               >
-                <Link href="/" className="hover:text-primary transition-colors">
+                <Link href="/" className="hover:text-primary transition-colors shrink-0">
                   Home
                 </Link>
-                <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
                 <span
                   className="text-foreground font-medium truncate"
                   aria-current="page"
@@ -90,15 +90,15 @@ export function PageHeader({
             {showBackLink && !breadcrumbPath && (
               <Link
                 href="/"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline mb-4"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline mb-3.5"
               >
-                <ArrowLeft className="h-3.5 w-3.5" />
+                <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
                 Back to Home
               </Link>
             )}
 
             {badge && (
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.065em] text-primary mb-3">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold uppercase tracking-[0.065em] text-primary mb-2.5">
                 <span>{badge}</span>
                 <span aria-hidden="true" className="text-border">
                   ·
@@ -109,12 +109,12 @@ export function PageHeader({
               </div>
             )}
 
-            <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground text-balance leading-tight">
+            <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground text-balance leading-tight break-words">
               {title}
             </h1>
 
             {description && (
-              <p className="mt-4 text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl text-pretty font-normal tracking-[0.002em]">
+              <p className="mt-3 sm:mt-4 text-sm sm:text-base lg:text-lg text-muted-foreground leading-relaxed max-w-2xl text-pretty font-normal tracking-[0.002em]">
                 {description}
               </p>
             )}

@@ -205,7 +205,7 @@ export function CustomSelect({
   return (
     <div
       ref={containerRef}
-      className={cn('relative w-full text-left', isOpen && 'z-[70]', className)}
+      className={cn('relative w-full min-w-0 max-w-full text-left', isOpen && 'z-[70]', className)}
     >
       {/* Hidden input for native form submission compatibility */}
       {name && <input type="hidden" name={name} value={value} required={required} />}
@@ -232,7 +232,7 @@ export function CustomSelect({
         }}
         onKeyDown={handleKeyDown}
         className={cn(
-          'group relative flex w-full items-center justify-between border font-medium cursor-pointer select-none',
+          'group relative flex w-full min-w-0 max-w-full overflow-hidden items-center justify-between border font-medium cursor-pointer select-none',
           sizeClasses,
           'bg-card/85 dark:bg-card/70 backdrop-blur-md',
           'border-border/80 dark:border-border/70',

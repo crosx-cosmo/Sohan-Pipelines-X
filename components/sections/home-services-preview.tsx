@@ -80,39 +80,39 @@ export function HomeServicesPreview() {
           className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10"
         >
           <div className="max-w-2xl">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.065em] text-primary mb-2.5">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold uppercase tracking-[0.065em] text-primary mb-2.5">
               <span>01. Core Capabilities</span>
               <span aria-hidden="true">·</span>
               <span className="text-muted-foreground font-medium">
                 Certified Plumbing Engineering
               </span>
             </div>
-            <h2 className="font-display text-3xl sm:text-4xl lg:text-4xl font-bold tracking-tight text-foreground text-balance">
+            <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground text-balance">
               Engineered Plumbing Services For Homes &amp; Commercial Buildings
             </h2>
-            <p className="mt-3 text-base text-muted-foreground leading-relaxed text-pretty font-normal">
+            <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed text-pretty font-normal">
               Curated highlights from our full service catalogue—from concealed
               CPVC/UPVC pipeline fitting and acoustic leak detection to sanitary
               fixture installation and overhead tank manifolds.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <div className="grid grid-cols-2 sm:flex items-center gap-2.5 w-full sm:w-auto shrink-0">
             <Button
               asChild
               variant="outline"
               size="sm"
-              className="font-semibold text-xs h-10 px-4 rounded-xl border-border/80"
+              className="font-semibold text-xs h-10 px-4 rounded-xl border-border/80 w-full sm:w-auto justify-center"
             >
               <Link href="/services">
                 View All Services
-                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                <ArrowRight className="ml-1.5 h-3.5 w-3.5 shrink-0" />
               </Link>
             </Button>
             <Button
               asChild
               size="sm"
-              className="font-semibold text-xs h-10 px-4 rounded-xl shadow-xs"
+              className="font-semibold text-xs h-10 px-4 rounded-xl shadow-xs w-full sm:w-auto justify-center"
             >
               <Link href="/book">Book a Service</Link>
             </Button>
@@ -202,7 +202,7 @@ export function HomeServicesPreview() {
 
         {/* 6-Card Curated Preview Grid */}
         {!loading && !error && previewServices.length > 0 && (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 items-stretch">
             {previewServices.map((service, index) => {
               const Icon = getServiceIcon(service.slug || service.name);
               const category = getServiceCategory(service.slug || service.name);
@@ -219,9 +219,10 @@ export function HomeServicesPreview() {
                     delay: index * 0.04,
                     ease: luxuryEasing,
                   }}
+                  className="h-full flex flex-col"
                 >
                   <Card className="h-full p-0 gap-0 border border-border/80 bg-card rounded-2xl transition-all duration-200 shadow-crisp-xs hover:shadow-crisp-md hover:border-primary/50 flex flex-col justify-between group">
-                    <CardContent className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                    <CardContent className="p-5 sm:p-6 flex-1 flex flex-col justify-between space-y-4">
                       <div>
                         {/* Icon & Title Row */}
                         <div className="flex items-start gap-3.5 mb-3">
@@ -229,14 +230,14 @@ export function HomeServicesPreview() {
                             <Icon className="h-5 w-5" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-display font-bold text-base text-foreground leading-tight group-hover:text-primary transition-colors">
+                            <h3 className="font-display font-bold text-base text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors">
                               {service.name}
                             </h3>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground mt-1">
                               <span className="capitalize">{category}</span>
                               <span aria-hidden="true">·</span>
                               <span className="flex items-center gap-1 tabular-nums font-mono">
-                                <Clock className="h-3 w-3 text-muted-foreground" />
+                                <Clock className="h-3 w-3 text-muted-foreground shrink-0" />
                                 {service.duration || '1-3 hours'}
                               </span>
                             </div>
@@ -282,7 +283,7 @@ export function HomeServicesPreview() {
                         <Button
                           asChild
                           size="sm"
-                          className="text-xs font-semibold h-9 px-3.5 rounded-xl group/btn shadow-2xs"
+                          className="text-xs font-semibold h-9 px-3.5 rounded-xl group/btn shadow-2xs shrink-0"
                         >
                           <Link href={`/book?service=${service.id}`}>
                             Book Service
@@ -346,7 +347,9 @@ export function HomeServicesPreview() {
 
           <div className="flex items-center justify-between lg:justify-end gap-3 pt-3 lg:pt-0 border-t lg:border-t-0 border-border/60 shrink-0">
             <span className="text-xs text-muted-foreground lg:hidden">
-              Full {servicesList.length || 12}-service catalogue
+              {servicesList.length > 0
+                ? `Live ${servicesList.length}-service catalogue`
+                : 'Live service catalogue'}
             </span>
             <Button
               asChild
@@ -355,7 +358,8 @@ export function HomeServicesPreview() {
               className="font-semibold text-xs h-9.5 px-4 rounded-xl border-primary/30 text-primary hover:bg-primary/5"
             >
               <Link href="/services">
-                View All Services ({servicesList.length || 12})
+                View All Services
+                {servicesList.length > 0 ? ` (${servicesList.length})` : ''}
                 <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
               </Link>
             </Button>

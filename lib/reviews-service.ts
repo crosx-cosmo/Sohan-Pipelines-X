@@ -1,7 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import {
   getRecentLocalBookings,
-  KNOWN_DATABASE_SERVICE_IDS,
   type LocalBooking,
 } from '@/lib/booking-service';
 
@@ -136,25 +135,9 @@ function isLegacyDummyReviewRecord(r?: Partial<VerifiedWorkReview> | null): bool
   return false;
 }
 
-// Reverse lookup map from known service UUIDs -> readable service title
-const UUID_TO_SERVICE_NAME: Record<string, string> = {
-  'ed23cd6c-cdcf-4087-894a-eab97037b723': 'Leak Detection & Pipe Repair',
-  [KNOWN_DATABASE_SERVICE_IDS.PIPE_FITTING]: 'Pipe Fitting & Repair',
-  [KNOWN_DATABASE_SERVICE_IDS.WATER_TANK]: 'Water Tank & Motor Installation',
-  [KNOWN_DATABASE_SERVICE_IDS.DRAINAGE_CLEANING]: 'Drainage & Sewer Cleaning',
-  [KNOWN_DATABASE_SERVICE_IDS.WATERPROOFING]: 'Leak Detection & Waterproofing',
-};
-
 export function normalizeServiceDisplayName(rawName?: string | null): string {
   const clean = (rawName || '').trim();
   if (!clean) return 'Plumbing & Pipeline Service';
-  const lower = clean.toLowerCase();
-  if (lower === 'watar tank' || lower === 'water tank') {
-    return 'Water Tank & Pipeline Installation';
-  }
-  if (lower === 'pipe fitting') {
-    return 'Pipe Fitting & Joint Repair';
-  }
   return clean;
 }
 
@@ -162,7 +145,7 @@ let cachedServiceMap: Record<string, string> | null = null;
 
 async function getServiceIdToNameMap(): Promise<Record<string, string>> {
   if (cachedServiceMap) return cachedServiceMap;
-  const map: Record<string, string> = { ...UUID_TO_SERVICE_NAME };
+  const map: Record<string, string> = {};
   try {
     const { data } = await supabase.from('services').select('id, name');
     if (Array.isArray(data)) {
@@ -173,7 +156,7 @@ async function getServiceIdToNameMap(): Promise<Record<string, string>> {
       }
     }
   } catch {
-    // Use fallback map if offline
+    // Ignore if offline
   }
   cachedServiceMap = map;
   return map;

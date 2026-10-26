@@ -9,6 +9,12 @@ export default function Template({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const shouldReduceMotion = useReducedMotion();
 
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && !window.location.hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
+  }, [pathname]);
+
   return (
     <motion.div
       key={pathname}
@@ -19,7 +25,7 @@ export default function Template({ children }: { children: React.ReactNode }) {
         ease: gentleEasing,
       }}
       style={{ willChange: 'opacity' }}
-      className="flex-1 flex flex-col w-full gpu-accelerated"
+      className="flex-1 flex flex-col w-full min-w-0 max-w-full overflow-x-hidden gpu-accelerated"
     >
       {children}
     </motion.div>

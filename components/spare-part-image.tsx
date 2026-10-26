@@ -22,6 +22,7 @@ interface SparePartImageProps {
   className?: string;
   isOutOfStock?: boolean;
   compact?: boolean;
+  priority?: boolean;
 }
 
 function renderHardwarePlaceholderIcon(
@@ -83,6 +84,7 @@ export function SparePartImage({
   className,
   isOutOfStock = false,
   compact = false,
+  priority = false,
 }: SparePartImageProps) {
   const resolvedUrl = React.useMemo(
     () =>
@@ -128,6 +130,10 @@ export function SparePartImage({
             alt={name}
             fill
             sizes={sizes}
+            quality={85}
+            priority={priority}
+            loading={priority ? undefined : 'lazy'}
+            decoding="async"
             referrerPolicy="no-referrer"
             onLoad={() => setLoadedUrl(resolvedUrl)}
             onError={() => setFailedUrl(resolvedUrl)}

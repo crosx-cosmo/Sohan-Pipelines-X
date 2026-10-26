@@ -14,40 +14,24 @@ import {
 } from 'lucide-react';
 import { businessInfo } from '@/lib/business-info';
 import {
+  fetchLiveServices,
+  getCachedServices,
   fetchLiveServiceAreas,
   getCachedServiceAreas,
+  type DbService,
   type DbServiceArea,
 } from '@/lib/supabase-data';
 import { BrandLogo } from '@/components/brand-logo';
 
-const footerSections = [
-  {
-    id: 'services',
-    title: 'Core Services',
-    links: [
-      { label: 'All Services Catalogue', href: '/services' },
-      { label: 'Pipe Fitting & Repair', href: '/services' },
-      { label: 'Drainage & Sewer Jetting', href: '/services' },
-      { label: 'Bathroom & Fixture Fitting', href: '/services' },
-      { label: 'Water Tank Installation', href: '/services' },
-      { label: 'Leak Detection & Pressure Testing', href: '/services' },
-      { label: 'Kitchen & Water Purifier Hookup', href: '/services' },
-    ],
-  },
-  {
-    id: 'company',
-    title: 'Customer & Company',
-    links: [
-      { label: 'About Our Contractors', href: '/about' },
-      { label: 'Verified Client Reviews', href: '/reviews' },
-      { label: 'Service Areas & Hubs', href: '/service-areas' },
-      { label: 'Plumbing FAQs', href: '/faq' },
-      { label: 'Contact Us', href: '/contact' },
-      { label: 'Book a Service Online', href: '/book' },
-      { label: 'Find Existing Booking', href: '/find-booking' },
-      { label: 'Plumbing Spare Parts', href: '/spare-parts' },
-    ],
-  },
+const companyLinks = [
+  { label: 'About Our Contractors', href: '/about' },
+  { label: 'Verified Client Reviews', href: '/reviews' },
+  { label: 'Service Areas & Hubs', href: '/service-areas' },
+  { label: 'Plumbing FAQs', href: '/faq' },
+  { label: 'Contact Us', href: '/contact' },
+  { label: 'Book a Service Online', href: '/book' },
+  { label: 'Find Existing Booking', href: '/find-booking' },
+  { label: 'Plumbing Spare Parts', href: '/spare-parts' },
 ];
 
 export function SiteFooter() {
@@ -58,12 +42,20 @@ export function SiteFooter() {
     company: false,
     coverage: false,
   });
+  const [liveServices, setLiveServices] = React.useState<DbService[]>(
+    () => getCachedServices() ?? []
+  );
   const [liveAreas, setLiveAreas] = React.useState<DbServiceArea[]>(
     () => getCachedServiceAreas() ?? []
   );
 
   React.useEffect(() => {
     let active = true;
+    fetchLiveServices().then(({ data }) => {
+      if (active) {
+        setLiveServices(data);
+      }
+    });
     fetchLiveServiceAreas().then(({ data }) => {
       if (active) {
         setLiveAreas(data);
@@ -73,6 +65,28 @@ export function SiteFooter() {
       active = false;
     };
   }, []);
+
+  const footerSections = React.useMemo(
+    () => [
+      {
+        id: 'services',
+        title: 'Core Services',
+        links: [
+          { label: 'All Services Catalogue', href: '/services' },
+          ...liveServices.map((s) => ({
+            label: s.name,
+            href: `/book?service=${encodeURIComponent(s.id)}`,
+          })),
+        ],
+      },
+      {
+        id: 'company',
+        title: 'Customer & Company',
+        links: companyLinks,
+      },
+    ],
+    [liveServices]
+  );
 
   const toggleSection = (id: string) => {
     setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -187,12 +201,17 @@ export function SiteFooter() {
           </div>
 
           {/* Collapsible Mobile Accordions / Desktop Multi-column */}
-          {footerSections.map((section) => {
+          {footerSections.map((section, idx) => {
             const isOpen = openSections[section.id];
+            const isLastSection = idx === footerSections.length - 1;
             return (
               <div
                 key={section.id}
-                className="border-b lg:border-b-0 border-border/50 pb-4 lg:pb-0"
+                className={
+                  isLastSection
+                    ? 'pb-1 lg:pb-0'
+                    : 'border-b lg:border-b-0 border-border/50 pb-4 lg:pb-0'
+                }
               >
                 <motion.button
                   type="button"
@@ -263,54 +282,93 @@ export function SiteFooter() {
           })}
         </div>
 
-        {/* Live Service Areas Directory Row (Concise Summary) */}
-        {liveAreas.length > 0 && (
-          <div className="mt-10 pt-8 border-t border-border/50">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
-              <p className="text-[11px] font-semibold text-foreground uppercase tracking-wider">
-                Key Service Hubs:
-              </p>
-              <span className="text-[11px] text-muted-foreground">
-                Base Workshop: {businessInfo.addressShort} (PIN{' '}
-                {businessInfo.pincode})
-              </span>
+        {/* Key Service Hubs & Base Workshop Directory Card (Aligned for Mobile & Desktop) */}
+        <div className="mt-8 lg:mt-10 rounded-2xl border border-border/80 bg-muted/20 p-4 sm:p-5 lg:p-6">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-border/60">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0 mt-0.5 sm:mt-0">
+                <MapPin className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-foreground uppercase tracking-wider">
+                  Key Service Hubs &amp; Regional Dispatch
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Verified rapid-response coverage across Paschim &amp; Purba Medinipur
+                </p>
+              </div>
             </div>
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[11px] text-muted-foreground">
-              {liveAreas.slice(0, 8).map((area, idx) => (
-                <span
-                  key={`${area.id || area.locality}-${idx}`}
-                  className="inline-flex items-center"
-                >
-                  <Link
-                    href={`/book?area=${encodeURIComponent(area.locality)}`}
-                    className="hover:text-primary transition-colors hover:underline"
-                  >
-                    {area.locality}
-                    {area.pincode ? ` (${area.pincode})` : ''}
-                  </Link>
-                  <span className="ml-2 text-border">·</span>
+
+            {/* Structured Base Workshop Badge/Box */}
+            <div className="flex items-start sm:items-center gap-2.5 rounded-xl bg-card border border-border/70 px-3.5 py-2.5 text-left shrink-0">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0 mt-1.5 sm:mt-0" />
+              <div className="text-[11px] leading-snug">
+                <span className="font-semibold text-foreground block sm:inline">
+                  Base Workshop:{' '}
                 </span>
-              ))}
-              <Link
-                href="/service-areas"
-                className="font-semibold text-primary hover:underline"
-              >
-                View All Service Areas &rarr;
-              </Link>
+                <span className="text-muted-foreground">
+                  Bahardaltitia, Keshrambha, Dantan
+                </span>{' '}
+                <span className="font-mono font-semibold text-primary">
+                  (PIN {businessInfo.pincode})
+                </span>
+              </div>
             </div>
           </div>
-        )}
+
+          {liveAreas.length > 0 ? (
+            <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2">
+                {liveAreas.slice(0, 8).map((area, idx) => (
+                  <Link
+                    key={`${area.id || area.locality}-${idx}`}
+                    href={`/book?area=${encodeURIComponent(area.locality)}`}
+                    className="inline-flex items-center justify-between sm:justify-start gap-1.5 px-3 py-1.5 rounded-xl bg-card border border-border/70 text-[11px] font-semibold text-foreground hover:border-primary/50 hover:text-primary transition-colors truncate"
+                  >
+                    <span className="truncate">{area.locality}</span>
+                    {area.pincode && (
+                      <span className="font-mono text-[10px] text-muted-foreground shrink-0">
+                        ({area.pincode})
+                      </span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+
+              <Link
+                href="/service-areas"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/15 border border-primary/20 font-semibold text-xs transition-colors shrink-0"
+              >
+                <span>View All Service Areas</span>
+                <span aria-hidden="true">&rarr;</span>
+              </Link>
+            </div>
+          ) : (
+            <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-muted-foreground">
+              <span>
+                Same-day mobile plumbing teams serving Dantan, Keshrambha, Midnapore, Kharagpur, and surrounding blocks.
+              </span>
+              <Link
+                href="/service-areas"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/15 border border-primary/20 font-semibold text-xs transition-colors shrink-0"
+              >
+                <span>View All Service Areas</span>
+                <span aria-hidden="true">&rarr;</span>
+              </Link>
+            </div>
+          )}
+        </div>
 
         {/* Copyright and Operating Hours Sub-bar */}
-        <div className="mt-8 pt-6 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <p className="text-[11px]">
+        <div className="mt-8 pt-6 border-t border-border/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 text-xs text-muted-foreground">
+          <p className="text-[11px] text-left">
             &copy; {new Date().getFullYear()} {businessInfo.name}. All rights
             reserved.
           </p>
 
-          <div className="flex flex-wrap items-center gap-4 text-[11px]">
-            <span className="flex items-center gap-1.5">
-              <Clock className="h-3 w-3 text-primary" />
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px]">
+            <span className="flex items-center gap-1.5 text-foreground font-medium">
+              <Clock className="h-3.5 w-3.5 text-primary shrink-0" />
               <span>{businessInfo.hours}</span>
             </span>
             <span>{businessInfo.hoursDays}</span>

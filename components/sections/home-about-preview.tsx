@@ -48,111 +48,115 @@ export function HomeAboutPreview() {
   return (
     <section className="py-16 lg:py-20 bg-muted/20 border-b border-border/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-stretch">
           {/* Left Narrative Column */}
           <motion.div
             initial={{ opacity: 0, x: -16 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-50px' }}
             transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-6 space-y-6"
+            className="lg:col-span-6 min-w-0 flex flex-col justify-between space-y-5"
           >
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.065em] text-primary">
-              <span>03. Workmanship &amp; Standards</span>
-              <span aria-hidden="true">·</span>
-              <span className="text-muted-foreground font-medium">
-                Established {businessInfo.established}
-              </span>
-            </div>
-
-            <h2 className="font-display text-3xl sm:text-4xl lg:text-4xl font-bold tracking-tight text-foreground text-balance">
-              {yearsExperience} Years of Trusted Plumbing Engineering in Medinipur
-            </h2>
-
-            <div className="space-y-4 text-sm sm:text-base text-muted-foreground leading-relaxed text-pretty font-normal">
-              <p>
-                Founded in Bahardaltitia, Keshrambha, Dantan (PIN 721451),{' '}
-                <strong className="text-foreground font-semibold">
-                  {businessInfo.name}
-                </strong>{' '}
-                was established on a clear principle: plumbing is critical
-                infrastructure that protects your property, water hygiene, and
-                daily comfort.
-              </p>
-              <p>
-                Over the past decade, we have completed 500+ residential and
-                commercial installations across West Medinipur and South Bengal
-                using certified fittings, precision jointing, and hydrostatic
-                testing.
-              </p>
-            </div>
-
-            {/* Quick Proof Metrics Row */}
-            <div className="pt-2 grid grid-cols-2 sm:grid-cols-4 gap-3.5 border-t border-border/60">
-              <div className="p-3.5 rounded-2xl bg-card border border-border/60 shadow-2xs">
-                <p className="font-display text-2xl font-bold text-foreground tabular-nums font-mono">
-                  {yearsExperience}+
-                </p>
-                <p className="text-[11px] text-muted-foreground font-medium mt-0.5">
-                  Years Active
-                </p>
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold uppercase tracking-[0.065em] text-primary">
+                <span>03. Workmanship &amp; Standards</span>
+                <span aria-hidden="true">·</span>
+                <span className="text-muted-foreground font-medium">
+                  Established {businessInfo.established}
+                </span>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-card border border-border/60 shadow-2xs">
-                <p className="font-display text-2xl font-bold text-foreground tabular-nums font-mono">
-                  500+
-                </p>
-                <p className="text-[11px] text-muted-foreground font-medium mt-0.5">
-                  Projects Done
-                </p>
-              </div>
+              <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground text-balance">
+                {yearsExperience} Years of Trusted Plumbing Engineering in Medinipur
+              </h2>
 
-              <div className="p-3.5 rounded-2xl bg-card border border-border/60 shadow-2xs">
-                <p className="font-display text-2xl font-bold text-foreground tabular-nums font-mono">
-                  12-Mo
+              <div className="space-y-3 text-sm sm:text-base text-muted-foreground leading-relaxed text-pretty font-normal">
+                <p>
+                  Founded in Bahardaltitia, Keshrambha, Dantan (PIN 721451),{' '}
+                  <strong className="text-foreground font-semibold">
+                    {businessInfo.name}
+                  </strong>{' '}
+                  was established on a clear principle: plumbing is critical
+                  infrastructure that protects your property, water hygiene, and
+                  daily comfort.
                 </p>
-                <p className="text-[11px] text-muted-foreground font-medium mt-0.5">
-                  Joint Warranty
-                </p>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-card border border-border/60 shadow-2xs">
-                <p className="font-display text-2xl font-bold text-foreground tabular-nums font-mono">
-                  20+
-                </p>
-                <p className="text-[11px] text-muted-foreground font-medium mt-0.5">
-                  Partner Brands
+                <p>
+                  Over the past decade, we have completed 500+ residential and
+                  commercial installations across West Medinipur and South Bengal
+                  using certified fittings, precision jointing, and hydrostatic
+                  testing.
                 </p>
               </div>
             </div>
 
-            {/* CTAs */}
-            <div className="pt-1 flex flex-wrap items-center gap-3">
-              <Button
-                asChild
-                className="font-semibold text-xs h-10 px-5 rounded-xl shadow-xs"
-              >
-                <Link href="/about">
-                  Learn More About Us
-                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                </Link>
-              </Button>
+            <div className="space-y-5">
+              {/* Quick Proof Metrics Row */}
+              <div className="pt-2 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-3.5 border-t border-border/60 items-stretch">
+                <div className="h-full p-3.5 rounded-2xl bg-card border border-border/60 shadow-2xs flex flex-col justify-between">
+                  <p className="font-display text-2xl font-bold text-foreground tabular-nums font-mono">
+                    {yearsExperience}+
+                  </p>
+                  <p className="text-[11px] text-muted-foreground font-medium mt-0.5">
+                    Years Active
+                  </p>
+                </div>
 
-              <Button
-                asChild
-                variant="outline"
-                className="font-semibold text-xs h-10 px-5 rounded-xl border-border/80"
-              >
-                <a href={`tel:${businessInfo.phone}`}>
-                  <Phone className="mr-1.5 h-3.5 w-3.5 text-primary" />
-                  Direct Line: {businessInfo.phoneDisplay}
-                </a>
-              </Button>
+                <div className="h-full p-3.5 rounded-2xl bg-card border border-border/60 shadow-2xs flex flex-col justify-between">
+                  <p className="font-display text-2xl font-bold text-foreground tabular-nums font-mono">
+                    500+
+                  </p>
+                  <p className="text-[11px] text-muted-foreground font-medium mt-0.5">
+                    Projects Done
+                  </p>
+                </div>
+
+                <div className="h-full p-3.5 rounded-2xl bg-card border border-border/60 shadow-2xs flex flex-col justify-between">
+                  <p className="font-display text-2xl font-bold text-foreground tabular-nums font-mono">
+                    12-Mo
+                  </p>
+                  <p className="text-[11px] text-muted-foreground font-medium mt-0.5">
+                    Joint Warranty
+                  </p>
+                </div>
+
+                <div className="h-full p-3.5 rounded-2xl bg-card border border-border/60 shadow-2xs flex flex-col justify-between">
+                  <p className="font-display text-2xl font-bold text-foreground tabular-nums font-mono">
+                    20+
+                  </p>
+                  <p className="text-[11px] text-muted-foreground font-medium mt-0.5">
+                    Partner Brands
+                  </p>
+                </div>
+              </div>
+
+              {/* CTAs */}
+              <div className="pt-1 grid grid-cols-1 sm:flex items-center gap-3 w-full sm:w-auto">
+                <Button
+                  asChild
+                  className="font-semibold text-xs h-10.5 px-5 rounded-xl shadow-xs w-full sm:w-auto justify-center"
+                >
+                  <Link href="/about">
+                    Learn More About Us
+                    <ArrowRight className="ml-1.5 h-3.5 w-3.5 shrink-0" />
+                  </Link>
+                </Button>
+
+                <Button
+                  asChild
+                  variant="outline"
+                  className="font-semibold text-xs h-10.5 px-5 rounded-xl border-border/80 w-full sm:w-auto justify-center"
+                >
+                  <a href={`tel:${businessInfo.phone}`}>
+                    <Phone className="mr-1.5 h-3.5 w-3.5 text-primary shrink-0" />
+                    Direct Line: {businessInfo.phoneDisplay}
+                  </a>
+                </Button>
+              </div>
             </div>
           </motion.div>
 
           {/* Right Disciplines Grid */}
-          <div className="lg:col-span-6 grid sm:grid-cols-2 gap-4">
+          <div className="lg:col-span-6 grid sm:grid-cols-2 gap-4 items-stretch">
             {disciplines.map((item, idx) => {
               const Icon = item.icon;
               return (
@@ -166,19 +170,19 @@ export function HomeAboutPreview() {
                     delay: idx * 0.04,
                     ease: [0.16, 1, 0.3, 1],
                   }}
-                  className="rounded-2xl border border-border/80 bg-card p-5 sm:p-6 flex flex-col justify-between shadow-crisp-xs transition-all duration-200 hover:border-primary/50 hover:shadow-crisp-md"
+                  className="h-full rounded-2xl border border-border/80 bg-card p-5 sm:p-6 flex flex-col justify-between shadow-crisp-xs transition-all duration-200 hover:border-primary/50 hover:shadow-crisp-md"
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <span className="text-[11px] font-semibold text-muted-foreground tabular-nums font-mono">
-                      0{idx + 1}
-                    </span>
-                  </div>
-
                   <div>
-                    <h3 className="font-display font-bold text-sm sm:text-base text-foreground leading-snug mb-2">
+                    <div className="flex items-center justify-between mb-3.5">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <span className="text-[11px] font-semibold text-muted-foreground tabular-nums font-mono">
+                        0{idx + 1}
+                      </span>
+                    </div>
+
+                    <h3 className="font-display font-bold text-base text-foreground leading-snug mb-1.5">
                       {item.title}
                     </h3>
                     <p className="text-xs text-muted-foreground leading-relaxed">

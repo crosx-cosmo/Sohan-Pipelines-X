@@ -11,6 +11,7 @@ import { SiteFooter } from '@/components/site-footer';
 import { NavigationProgressBar } from '@/components/navigation-progress-bar';
 import { CartProvider } from '@/lib/cart-context';
 import { CartDrawer } from '@/components/cart-drawer';
+import { AiAssistantWidget } from '@/components/ai-assistant-widget';
 import { SITE_LOGO_URL } from '@/lib/site-logo';
 
 const jakarta = Plus_Jakarta_Sans({
@@ -30,17 +31,22 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
+const APP_BASE_URL =
+  process.env.APP_URL || 'https://sohan-pipelines.netlify.app';
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://sohan-pipelines.netlify.app'),
+  metadataBase: new URL(APP_BASE_URL),
   title: {
     default: "Sohan Pipeline's & Plumbing — Total Plumbing Solutions",
     template: "%s · Sohan Pipeline's & Plumbing",
   },
   description:
     'Total Plumbing Solutions in Midnapore, Dantan, and surrounding areas. Reliable pipe fitting, leak detection, bathroom fixtures, and emergency plumbing.',
+  applicationName: "Sohan Pipeline's & Plumbing",
   keywords: [
     'plumber Midnapore',
     'plumber Dantan',
+    'plumber Keshrambha',
     'plumbing services Kharagpur',
     'pipe fitting West Bengal',
     'drainage cleaning Midnapore',
@@ -49,13 +55,20 @@ export const metadata: Metadata = {
     'concealed leak detection',
     'emergency plumber South Bengal',
     'Sohan Pipelines',
-    'plumber Keshrambha',
+    'Sohan Plumbing Works',
+    'plumbing spare parts Dantan',
+    'UPVC CPVC pipe fitting Midnapore',
     'plumber Contai',
     'plumber Tamluk',
+    'plumber Belda',
+    'plumber Narayangarh',
+    'plumber Egra',
     'plumber Jhargram',
     'plumber Ghatal',
+    'Paschim Medinipur plumber',
+    'Purba Medinipur plumber',
   ],
-  authors: [{ name: "Sohan Pipeline's Engineering Team" }],
+  authors: [{ name: "Sohan Pipeline's Engineering Team", url: APP_BASE_URL }],
   creator: "Sohan Pipeline's & Plumbing",
   publisher: "Sohan Pipeline's & Plumbing",
   category: 'Home & Commercial Plumbing Services',
@@ -66,12 +79,15 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: '/',
+    languages: {
+      'en-IN': '/',
+    },
   },
   openGraph: {
     title: "Sohan Pipeline's & Plumbing — Total Plumbing Solutions",
     description:
       'Total Plumbing Solutions in Midnapore, Dantan, and surrounding areas. Reliable pipe fitting, leak detection, bathroom fixtures, and emergency plumbing.',
-    url: 'https://sohan-pipelines.netlify.app',
+    url: APP_BASE_URL,
     siteName: "Sohan Pipeline's & Plumbing",
     locale: 'en_IN',
     type: 'website',
@@ -88,8 +104,14 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: "Sohan Pipeline's & Plumbing — Total Plumbing Solutions",
     description:
-      'Certified pipe fitting, bathroom fixtures, and leak detection in Midnapore and South Bengal.',
+      'Total Plumbing Solutions in Midnapore, Dantan, and surrounding areas. Reliable pipe fitting, leak detection, bathroom fixtures, and emergency plumbing.',
     images: [SITE_LOGO_URL],
+  },
+  other: {
+    'geo.region': 'IN-WB',
+    'geo.placename': 'Dantan, West Medinipur, West Bengal',
+    'geo.position': '21.9547;87.2718',
+    ICBM: '21.9547, 87.2718',
   },
   robots: {
     index: true,
@@ -129,7 +151,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning className={jakarta.variable}>
-      <body className="font-sans antialiased min-h-screen pb-14 md:pb-0 flex flex-col bg-background text-foreground">
+      <body className="font-sans antialiased min-h-screen w-full max-w-full overflow-x-hidden pb-16 md:pb-0 flex flex-col bg-background text-foreground">
         <Suspense fallback={null}>
           <NavigationProgressBar />
         </Suspense>
@@ -137,12 +159,13 @@ export default function RootLayout({
         <ThemeProvider>
           <CartProvider>
             <SiteHeader />
-            <div className="flex-1 flex flex-col w-full">
+            <div className="flex-1 flex flex-col w-full min-w-0 max-w-full overflow-x-hidden">
               {children}
             </div>
             <SiteFooter />
             <MobileQuickBar />
             <CartDrawer />
+            <AiAssistantWidget />
           </CartProvider>
         </ThemeProvider>
         <Toaster position="top-right" richColors />

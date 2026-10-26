@@ -109,17 +109,17 @@ export function HomeReviewsPreview() {
           className="flex flex-col md:flex-row md:items-end justify-between gap-6"
         >
           <div className="max-w-2xl">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.065em] text-primary mb-2.5">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold uppercase tracking-[0.065em] text-primary mb-2.5">
               <span>04. Work-Verified Feedback</span>
               <span aria-hidden="true">·</span>
               <span className="text-muted-foreground font-medium">
                 6-Category Customer Ratings
               </span>
             </div>
-            <h2 className="font-display text-3xl sm:text-4xl lg:text-4xl font-bold tracking-tight text-foreground text-balance">
+            <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground text-balance">
               Verified Client Reviews &amp; Craftsmanship Ratings
             </h2>
-            <p className="mt-3 text-base text-muted-foreground leading-relaxed text-pretty font-normal">
+            <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed text-pretty font-normal">
               Every customer review is linked to a completed service booking
               across West Medinipur, Dantan, and South Bengal—evaluating pipe
               workmanship, punctuality, transparent pricing, and site
@@ -127,9 +127,9 @@ export function HomeReviewsPreview() {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-card border border-amber-500/30 shadow-2xs">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/15 text-amber-500">
+          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-3 w-full md:w-auto shrink-0">
+            <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-card border border-amber-500/30 shadow-2xs">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/15 text-amber-500 shrink-0">
                 <Star className="h-4.5 w-4.5 fill-amber-400 text-amber-400" />
               </div>
               <div>
@@ -153,28 +153,28 @@ export function HomeReviewsPreview() {
               asChild
               variant="outline"
               size="sm"
-              className="font-semibold text-xs h-10 px-4 rounded-xl border-border/80"
+              className="font-semibold text-xs h-10 px-4 rounded-xl border-border/80 shrink-0"
             >
               <Link href="/reviews">
                 View All Reviews
-                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                <ArrowRight className="ml-1.5 h-3.5 w-3.5 shrink-0" />
               </Link>
             </Button>
           </div>
         </motion.div>
 
         {/* 6 Top-Class Star Categories Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 items-stretch">
           {starCategories.map((cat) => (
             <div
               key={cat.label}
-              className="rounded-2xl border border-border/80 bg-card p-3.5 space-y-1.5 shadow-2xs"
+              className="h-full rounded-2xl border border-border/80 bg-card p-3.5 flex flex-col justify-between gap-1.5 shadow-2xs min-w-0"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-1">
                 <span className="font-mono text-sm font-extrabold text-foreground tabular-nums">
                   {cat.val.toFixed(1)}
                 </span>
-                <div className="flex gap-0.5">
+                <div className="flex gap-0.5 shrink-0">
                   {[1, 2, 3, 4, 5].map((s) => (
                     <Star
                       key={s}
@@ -197,21 +197,21 @@ export function HomeReviewsPreview() {
         <div className="rounded-2xl border border-primary/25 bg-card p-5 sm:p-6 shadow-crisp-xs">
           <div className="grid gap-5 lg:grid-cols-12 items-center">
             <div className="lg:col-span-7 space-y-1.5">
-              <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-primary font-semibold">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-mono text-primary font-semibold">
                 <span className="inline-flex items-center gap-1">
-                  <Search className="h-3.5 w-3.5" /> 1. Enter Booking ID
+                  <Search className="h-3.5 w-3.5 shrink-0" /> 1. Enter Booking ID
                 </span>
                 <span aria-hidden="true" className="text-border">
                   →
                 </span>
                 <span className="inline-flex items-center gap-1">
-                  <ClipboardCheck className="h-3.5 w-3.5" /> 2. Confirm Job
+                  <ClipboardCheck className="h-3.5 w-3.5 shrink-0" /> 2. Confirm Job
                 </span>
                 <span aria-hidden="true" className="text-border">
                   →
                 </span>
                 <span className="inline-flex items-center gap-1">
-                  <MessageSquarePlus className="h-3.5 w-3.5" /> 3. Submit Rating
+                  <MessageSquarePlus className="h-3.5 w-3.5 shrink-0" /> 3. Submit Rating
                 </span>
               </div>
               <h3 className="font-display text-base sm:text-lg font-bold text-foreground">
@@ -235,10 +235,10 @@ export function HomeReviewsPreview() {
               />
               <Button
                 type="submit"
-                className="h-10.5 px-5 rounded-xl font-semibold text-xs shrink-0"
+                className="h-10.5 px-5 rounded-xl font-semibold text-xs shrink-0 justify-center"
               >
                 Verify &amp; Rate
-                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                <ArrowRight className="ml-1.5 h-3.5 w-3.5 shrink-0" />
               </Button>
             </form>
           </div>
@@ -246,7 +246,7 @@ export function HomeReviewsPreview() {
 
         {/* Verified Reviews Grid (if reviews exist) */}
         {!loading && reviews.length > 0 && (
-          <div className="grid gap-5 md:grid-cols-3">
+          <div className="grid gap-5 md:grid-cols-3 items-stretch">
             {reviews.slice(0, 3).map((review, i) => (
               <motion.div
                 key={review.id}
@@ -258,11 +258,12 @@ export function HomeReviewsPreview() {
                   delay: i * 0.05,
                   ease: [0.16, 1, 0.3, 1],
                 }}
+                className="h-full flex flex-col"
               >
                 <Card className="h-full p-0 gap-0 border border-border/80 bg-card rounded-2xl shadow-crisp-xs hover:shadow-crisp-md hover:border-primary/50 flex flex-col justify-between group">
                   <CardContent className="p-6 flex-1 flex flex-col justify-between space-y-4">
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5">
                           <div className="flex gap-0.5">
                             {Array.from({
@@ -279,8 +280,8 @@ export function HomeReviewsPreview() {
                           </span>
                         </div>
                         <div className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium font-mono">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                          <span>{review.bookingId}</span>
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                          <span className="truncate">{review.bookingId}</span>
                         </div>
                       </div>
 
@@ -294,18 +295,20 @@ export function HomeReviewsPreview() {
                     </div>
 
                     <div className="pt-4 border-t border-border/60">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="font-display font-bold text-sm text-foreground group-hover:text-primary transition-colors">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <p className="font-display font-bold text-sm text-foreground group-hover:text-primary transition-colors truncate">
                           {review.customerName}
                         </p>
-                        <span className="text-[11px] font-medium text-primary flex items-center gap-1">
-                          <Wrench className="h-3 w-3" />
-                          {review.serviceName}
+                        <span className="text-[11px] font-medium text-primary flex items-center gap-1 shrink-0">
+                          <Wrench className="h-3 w-3 shrink-0" />
+                          <span className="truncate max-w-[130px]">{review.serviceName}</span>
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <MapPin className="h-3 w-3 text-muted-foreground/70" />
-                        {review.customerRole} · {review.locality}
+                        <MapPin className="h-3 w-3 text-muted-foreground/70 shrink-0" />
+                        <span className="truncate">
+                          {review.customerRole} · {review.locality}
+                        </span>
                       </p>
                     </div>
                   </CardContent>
@@ -316,7 +319,7 @@ export function HomeReviewsPreview() {
         )}
 
         {/* Bottom Trust Strip */}
-        <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
+        <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
             <BadgeCheck className="h-4 w-4 text-emerald-500 shrink-0" />
             <span>
@@ -327,7 +330,7 @@ export function HomeReviewsPreview() {
 
           <Link
             href="/reviews#write-review"
-            className="inline-flex items-center font-semibold text-primary hover:underline"
+            className="inline-flex items-center font-semibold text-primary hover:underline self-start sm:self-center shrink-0"
           >
             Submit Work-Basis Review
             <ArrowRight className="ml-1 h-3.5 w-3.5" />
